@@ -1,0 +1,14 @@
+<?php
+return [
+    'headers_dir' => __DIR__ . '/source/yla/src/LuaEngine/methods',
+    'site_title'  => 'YLA API',
+    'setConf'     => 0,
+    'refetch'     => [
+        'enabled'        => false,
+        'interval_unit'  => 'days',
+        'interval_value' => 1,
+        'last_fetched'   => 0,
+        'zip_url'        => '',
+        'dest_key'       => '',
+    ],
+];

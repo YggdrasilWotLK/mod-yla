@@ -1,0 +1,570 @@
+/*
+* Copyright (C) 2010 - 2025 Eluna Lua Engine <https://elunaluaengine.github.io/>
+* This program is free software licensed under GPL version 3
+* Please see the included DOCS/LICENSE.md for more information
+*/
+
+#ifndef MAPMETHODS_H
+#define MAPMETHODS_H
+
+#include "YLAInstanceAI.h"
+#include "ObjectAccessor.h"
+#include <shared_mutex>
+
+/***
+ * A game map, e.g. Azeroth, Eastern Kingdoms, the Molten Core, etc.
+ *
+ * Inherits all methods from: none
+ */
+namespace LuaMap
+{
+    // Map-state Lua may only walk the stores of its own map+instance: any
+    // other map is owned by another worker (or the world). Global-state
+    // callers run with maps idle and keep existing behavior either way.
+    static bool IsOwnMap(lua_State* L, Map* map)
+    {
+        YLA* callingE = YLA::GetYLA(L);
+        return callingE->GetStateMapId() == YLA_GLOBAL_STATE ||
+            (map->GetId() == callingE->GetStateMapId() && map->GetInstanceId() == callingE->GetStateInstanceId());
+    }
+
+    /**
+     * Returns `true` if the [Map] is an arena [BattleGround], `false` otherwise.
+     *
+     * @return bool isArena
+     */
+    int IsArena(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->IsBattleArena());
+        return 1;
+    }
+
+    /**
+     * Returns `true` if the [Map] is a non-arena [BattleGround], `false` otherwise.
+     *
+     * @return bool isBattleGround
+     */
+    int IsBattleground(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->IsBattleground());
+        return 1;
+    }
+
+    /**
+     * Returns `true` if the [Map] is a dungeon, `false` otherwise.
+     *
+     * @return bool isDungeon
+     */
+    int IsDungeon(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->IsDungeon());
+        return 1;
+    }
+
+    /**
+     * Returns `true` if the [Map] has no [Player]s, `false` otherwise.
+     *
+     * @return bool IsEmpty
+     */
+    int IsEmpty(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->IsEmpty());
+        return 1;
+    }
+
+    /**
+     * Returns `true` if the [Map] is a heroic, `false` otherwise.
+     *
+     * @return bool isHeroic
+     */
+    int IsHeroic(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->IsHeroic());
+        return 1;
+    }
+
+    /**
+     * Returns `true` if the [Map] is a raid, `false` otherwise.
+     *
+     * @return bool isRaid
+     */
+    int IsRaid(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->IsRaid());
+        return 1;
+    }
+
+    /**
+     * Returns the name of the [Map].
+     *
+     * @return string mapName
+     */
+    int GetName(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->GetMapName());
+        return 1;
+    }
+
+    /**
+     * Returns the height of the [Map] at the given X and Y coordinates.
+     *
+     * In case of no height found nil is returned
+     *
+     * @param float x
+     * @param float y
+     * @return float z
+     */
+    int GetHeight(lua_State* L, Map* map)
+    {
+        float x = YLA::CHECKVAL<float>(L, 2);
+        float y = YLA::CHECKVAL<float>(L, 3);
+        uint32 phasemask = YLA::CHECKVAL<uint32>(L, 4, 1);
+        float z = map->GetHeight(phasemask, x, y, MAX_HEIGHT);
+        if (z != INVALID_HEIGHT)
+            YLA::Push(L, z);
+        return 1;
+    }
+
+    /**
+     * Returns the difficulty of the [Map].
+     *
+     * Always returns 0 if the expansion is pre-TBC.
+     *
+     * @return int32 difficulty
+     */
+    int GetDifficulty(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->GetDifficulty());
+        return 1;
+    }
+
+    /**
+     * Returns the instance ID of the [Map].
+     *
+     * @return uint32 instanceId
+     */
+    int GetInstanceId(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->GetInstanceId());
+        return 1;
+    }
+
+    /**
+     * Returns the player count currently on the [Map] (excluding GMs).
+     *
+     * @return uint32 playerCount
+     */
+    int GetPlayerCount(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->GetPlayersCountExceptGMs());
+        return 1;
+    }
+
+    /**
+     * Returns the ID of the [Map].
+     *
+     * @return uint32 mapId
+     */
+    int GetMapId(lua_State* L, Map* map)
+    {
+        YLA::Push(L, map->GetId());
+        return 1;
+    }
+
+    /**
+     * Returns the area ID of the [Map] at the specified X, Y, and Z coordinates.
+     *
+     * @param float x
+     * @param float y
+     * @param float z
+     * @param uint32 phasemask = PHASEMASK_NORMAL
+     * @return uint32 areaId
+     */
+    int GetAreaId(lua_State* L, Map* map)
+    {
+        float x = YLA::CHECKVAL<float>(L, 2);
+        float y = YLA::CHECKVAL<float>(L, 3);
+        float z = YLA::CHECKVAL<float>(L, 4);
+        float phasemask = YLA::CHECKVAL<uint32>(L, 5, PHASEMASK_NORMAL);
+
+        YLA::Push(L, map->GetAreaId(phasemask, x, y, z));
+        return 1;
+    }
+
+    /**
+     * Returns a [WorldObject] by its GUID from the map if it is spawned.
+     *
+     * @param ObjectGuid guid
+     * @return [WorldObject] object
+     */
+    int GetWorldObject(lua_State* L, Map* map)
+    {
+        ObjectGuid guid = YLA::CHECKVAL<ObjectGuid>(L, 2);
+
+        if (!IsOwnMap(L, map))
+        {
+            YLA::Push(L);
+            return 1;
+        }
+
+        switch (guid.GetHigh())
+        {
+            case HIGHGUID_PLAYER:
+                YLA::Push(L, eObjectAccessor()GetPlayer(map, guid));
+                break;
+            case HIGHGUID_TRANSPORT:
+            case HIGHGUID_MO_TRANSPORT:
+            case HIGHGUID_GAMEOBJECT:
+                YLA::Push(L, map->GetGameObject(guid));
+                break;
+            case HIGHGUID_VEHICLE:
+            case HIGHGUID_UNIT:
+                YLA::Push(L, map->GetCreature(guid));
+                break;
+            case HIGHGUID_PET:
+                YLA::Push(L, map->GetPet(guid));
+                break;
+            case HIGHGUID_DYNAMICOBJECT:
+                YLA::Push(L, map->GetDynamicObject(guid));
+                break;
+            case HIGHGUID_CORPSE:
+                YLA::Push(L, map->GetCorpse(guid));
+                break;
+            default:
+                break;
+        }
+        return 1;
+    }
+
+    /**
+     * Sets the [Weather] type based on [WeatherType] and grade supplied.
+     *
+     *     enum WeatherType
+     *     {
+     *         WEATHER_TYPE_FINE       = 0,
+     *         WEATHER_TYPE_RAIN       = 1,
+     *         WEATHER_TYPE_SNOW       = 2,
+     *         WEATHER_TYPE_STORM      = 3,
+     *         WEATHER_TYPE_THUNDERS   = 86,
+     *         WEATHER_TYPE_BLACKRAIN  = 90
+     *     };
+     *
+     * @param uint32 zone : id of the zone to set the weather for
+     * @param [WeatherType] type : the [WeatherType], see above available weather types
+     * @param float grade : the intensity/grade of the [Weather], ranges from 0 to 1
+     */
+    int SetWeather(lua_State* L, Map* map)
+    {
+        uint32 zoneId = YLA::CHECKVAL<uint32>(L, 2);
+        uint32 weatherType = YLA::CHECKVAL<uint32>(L, 3);
+        float grade = YLA::CHECKVAL<float>(L, 4);
+
+        if (!IsOwnMap(L, map))
+            return 0;
+
+        Weather* weather = map->GetOrGenerateZoneDefaultWeather(zoneId);
+        if (weather)
+            weather->SetWeather((WeatherType)weatherType, grade);
+        return 0;
+    }
+
+    /**
+     * Gets the instance data table for the [Map], if it exists.
+     *
+     * The instance must be scripted using YLA for this to succeed.
+     * If the instance is scripted in C++ this will return `nil`.
+     *
+     * @return table instance_data : instance data table, or `nil`
+     */
+    int GetInstanceData(lua_State* L, Map* map)
+    {
+        YLAInstanceAI* iAI = NULL;
+        if (InstanceMap* inst = map->ToInstanceMap())
+            iAI = dynamic_cast<YLAInstanceAI*>(inst->GetInstanceScript());
+
+        if (iAI)
+            YLA::GetYLA(L)->PushInstanceData(L, iAI, false);
+        else
+            YLA::Push(L); // nil
+
+        return 1;
+    }
+
+    /**
+     * Saves the [Map]'s instance data to the database.
+     */
+    int SaveInstanceData(lua_State* /*L*/, Map* map)
+    {
+        YLAInstanceAI* iAI = NULL;
+        if (InstanceMap* inst = map->ToInstanceMap())
+            iAI = dynamic_cast<YLAInstanceAI*>(inst->GetInstanceScript());
+
+        if (iAI)
+            iAI->SaveToDB();
+
+        return 0;
+    }
+
+    /**
+    * Returns a table with all the current [Player]s in the map
+    *
+    *     enum TeamId
+    *     {
+    *         TEAM_ALLIANCE = 0,
+    *         TEAM_HORDE = 1,
+    *         TEAM_NEUTRAL = 2
+    *     };
+    *
+    * @param [TeamId] team : optional check team of the [Player], Alliance, Horde or Neutral (All)
+    * @return table mapPlayers
+    */
+    int GetPlayers(lua_State* L, Map* map)
+    {
+        uint32 team = YLA::CHECKVAL<uint32>(L, 2, TEAM_NEUTRAL);
+
+        lua_newtable(L);
+        int tbl = lua_gettop(L);
+        uint32 i = 0;
+
+        // Iterates the global player store under its lock instead of the
+        // map's local list, so this is safe from any thread at any thread
+        // count. Pointers are validated again on use via liveness check.
+        {
+            std::shared_lock<std::shared_mutex> lock(*HashMapHolder<Player>::GetLock());
+            HashMapHolder<Player>::MapType const& players = eObjectAccessor()GetPlayers();
+            for (auto const& pair : players)
+            {
+                Player* player = pair.second;
+                if (!player)
+                    continue;
+                if (player->FindMap() != map)
+                    continue;
+                if (player->GetSession() && (team >= TEAM_NEUTRAL || player->GetTeamId() == team))
+                {
+                    YLA::Push(L, player);
+                    lua_rawseti(L, tbl, ++i);
+                }
+            }
+        }
+
+        lua_settop(L, tbl);
+        return 1;
+    }
+
+    /**
+     * Returns a table with all the current [Creature]s in the map
+     * 
+     * @return table mapCreatures
+     */
+    int GetCreatures(lua_State* L, Map* map)
+    {
+        if (!IsOwnMap(L, map))
+        {
+            lua_newtable(L);
+            return 1;
+        }
+
+        const auto& creatures = map->GetCreatureBySpawnIdStore();
+
+        lua_createtable(L, creatures.size(), 0);
+        int tbl = lua_gettop(L);
+
+        for (const auto& pair : creatures)
+        {
+            Creature* creature = pair.second;
+
+            YLA::Push(L, creature);
+            lua_rawseti(L, tbl, creature->GetSpawnId());
+        }
+
+        lua_settop(L, tbl);
+        return 1;
+    }
+
+    /**
+     * Returns a table with all the current [Creature]s in the specific area id
+     * 
+     * @param number areaId : specific area id
+     * @return table mapCreatures
+     */
+    int GetCreaturesByAreaId(lua_State* L, Map* map)
+    {
+        int32 areaId = YLA::CHECKVAL<int32>(L, 2, -1);
+
+        if (!IsOwnMap(L, map))
+        {
+            lua_newtable(L);
+            return 1;
+        }
+
+        std::vector<Creature*> filteredCreatures;
+
+        for (const auto& pair : map->GetCreatureBySpawnIdStore())
+        {
+            Creature* creature = pair.second;
+            if (areaId == -1 || creature->GetAreaId() == (uint32)areaId)
+            {
+                filteredCreatures.push_back(creature);
+            }
+        }
+
+        lua_createtable(L, filteredCreatures.size(), 0);
+        int tbl = lua_gettop(L);
+
+        for (Creature* creature : filteredCreatures)
+        {
+            YLA::Push(L, creature);
+            lua_rawseti(L, tbl, creature->GetSpawnId());
+        }
+
+        lua_settop(L, tbl);
+        return 1;
+    }
+    
+    /**
+     * Returns a table of all [Transport]s on the [Map]
+     *
+     * @return table transports
+     */
+    int GetTransports(lua_State* L, Map* map)
+    {
+        if (!IsOwnMap(L, map))
+        {
+            lua_newtable(L);
+            return 1;
+        }
+
+        TransportsContainer const& transports = map->GetAllTransports();
+        lua_newtable(L);
+        int i = 1;
+        for (Transport* transport : transports)
+        {
+            YLA::Push(L, transport);
+            lua_rawseti(L, -2, i++);
+        }
+        return 1;
+    }
+    
+    /**
+     * Returns a runtime-persistent data cache tied to the [Map].
+     * This data survives Lua state reloads and is accessible across all map states.
+     * Data is cleared when the map is destroyed or the server restarts.
+     *
+     * @return table data
+     */
+    int Data(lua_State* L, Map* map)
+    {
+        uint32 mapId = map->GetId();
+
+        lua_newtable(L);
+        int tbl = lua_gettop(L);
+
+        // Set method
+        lua_pushstring(L, "Set");
+        lua_pushnumber(L, (lua_Number)mapId);
+        lua_pushcclosure(L, [](lua_State* L) -> int {
+            uint32 mapId = (uint32)lua_tonumber(L, lua_upvalueindex(1));
+            const char* key = luaL_checkstring(L, 2);
+            // Marshal before locking: value size is unbounded, lock covers the insert only.
+            bool erase = lua_isnoneornil(L, 3);
+            std::string serialized;
+            if (!erase)
+            {
+                serialized = YLA::SerializeValue(L, 3);
+                if (serialized.empty())
+                {
+                    lua_pushvalue(L, 1);
+                    return 1;
+                }
+            }
+            std::lock_guard lock(YLA::mapDataMutex);
+            if (erase)
+                YLA::mapDataCache[mapId].erase(key);
+            else
+                YLA::mapDataCache[mapId][key] = std::move(serialized);
+            lua_pushvalue(L, 1);
+            return 1;
+        }, 1);
+        lua_rawset(L, tbl);
+
+        // Get method
+        lua_pushstring(L, "Get");
+        lua_pushnumber(L, (lua_Number)mapId);
+        lua_pushcclosure(L, [](lua_State* L) -> int {
+            uint32 mapId = (uint32)lua_tonumber(L, lua_upvalueindex(1));
+            const char* key = luaL_checkstring(L, 2);
+
+            // Copy out under lock, decode after: blob size is unbounded.
+            std::string blob;
+            {
+                std::shared_lock lock(YLA::mapDataMutex);
+                auto mapIt = YLA::mapDataCache.find(mapId);
+            if (mapIt == YLA::mapDataCache.end())
+            {
+                lua_pushnil(L);
+                return 1;
+            }
+            auto valIt = mapIt->second.find(key);
+            if (valIt == mapIt->second.end())
+            {
+                lua_pushnil(L);
+                return 1;
+            }
+            blob = valIt->second;
+            }
+
+            YLA::DeserializeValue(L, blob);
+
+            if (!lua_istable(L, -1))
+                return 1;
+
+            lua_newtable(L);
+            int proxy = lua_gettop(L);
+
+            lua_pushstring(L, "__inner");
+            lua_pushvalue(L, -3);
+            lua_rawset(L, proxy);
+
+            lua_pushstring(L, "AsTable");
+            lua_pushcclosure(L, [](lua_State* L) -> int {
+                lua_getfield(L, 1, "__inner");
+                return 1;
+            }, 0);
+            lua_rawset(L, proxy);
+
+            lua_remove(L, -2);
+            return 1;
+        }, 1);
+        lua_rawset(L, tbl);
+
+        // AsTable method
+        lua_pushstring(L, "AsTable");
+        lua_pushnumber(L, (lua_Number)mapId);
+        lua_pushcclosure(L, [](lua_State* L) -> int {
+            uint32 mapId = (uint32)lua_tonumber(L, lua_upvalueindex(1));
+            lua_newtable(L);
+            int result = lua_gettop(L);
+            // Snapshot under lock, decode after: blobs are unbounded.
+            std::vector<std::pair<std::string, std::string>> entries;
+            {
+                std::shared_lock lock(YLA::mapDataMutex);
+                auto mapIt = YLA::mapDataCache.find(mapId);
+                if (mapIt == YLA::mapDataCache.end())
+                    return 1;
+                for (auto& [key, val] : mapIt->second)
+                    entries.emplace_back(key, val);
+            }
+            for (auto& [key, val] : entries)
+            {
+                lua_pushstring(L, key.c_str());
+                YLA::DeserializeValue(L, val);
+                lua_rawset(L, result);
+            }
+            return 1;
+        }, 1);
+        lua_rawset(L, tbl);
+
+        return 1;
+    }
+};
+#endif

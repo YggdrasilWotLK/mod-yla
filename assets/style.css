@@ -44,6 +44,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui,
 
 /* ── TOPBAR ── */
 #logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+#logo img { width: 36px; height: 36px; border-radius: 50%; display: block; }
 #logo span { font-size: 16px; font-weight: 700; color: var(--purple3); letter-spacing: .5px; }
 #search-wrap { flex: 1; position: relative; }
 #search { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 12px 7px 34px; color: var(--text); font-size: 13px; outline: none; transition: border-color .2s; }

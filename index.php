@@ -69,6 +69,7 @@ $currentClass = $classes[$selectedClass] ?? null;
 $allMethods   = $currentClass ? get_all_methods($selectedClass, $classes) : [];
 
 $title = $config['site_title'];
+$base  = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
 ?>
 <!DOCTYPE html>
 <html lang="en">

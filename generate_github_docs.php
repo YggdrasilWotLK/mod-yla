@@ -190,6 +190,7 @@ foreach ($classes as $className => $cls) {
 
 copy(__DIR__ . '/assets/style.css', $distDir . '/assets/style.css');
 copy(__DIR__ . '/assets/app.js',    $distDir . '/assets/app.js');
+copy(__DIR__ . '/assets/yla-logo.png', $distDir . '/assets/yla-logo.png');
 
 echo 'Done. ' . count($classes) . " classes written to dist/\n";
 

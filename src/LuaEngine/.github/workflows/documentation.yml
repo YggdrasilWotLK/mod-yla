@@ -20,7 +20,7 @@ jobs:
       - name: Compile documentation
         run: |
           cd ${{ github.workspace }}/docs/
-          python -m ElunaDoc
+          python -m YLADoc
       - name: Create pull request
         run: |
           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/create-pr.sh"
@@ -29,10 +29,10 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
           SOURCE_FOLDER: '${{ github.workspace }}/docs/build'
           DESTINATION_REPO: 'azerothcore/azerothcore.github.io'
-          DESTINATION_FOLDER: 'pages/eluna'
+          DESTINATION_FOLDER: 'pages/yla'
           DESTINATION_BASE_BRANCH: 'master'
-          DESTINATION_HEAD_BRANCH: 'eluna-docs'
-          PR_TITLE: 'chore: update eluna documentation'
-          COMMIT_MESSAGE: 'chore: update eluna documentation'
+          DESTINATION_HEAD_BRANCH: 'yla-docs'
+          PR_TITLE: 'chore: update yla documentation'
+          COMMIT_MESSAGE: 'chore: update yla documentation'
           USER_EMAIL: 'ax.cocat@gmail.com'
           USER_NAME: 'r-o-b-o-t-o'

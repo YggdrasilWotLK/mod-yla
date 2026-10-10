@@ -1,7 +1,7 @@
 <?php
 return [
     'headers_dir' => __DIR__ . '/source/yla/src/LuaEngine/methods',
-    'site_title'  => 'YLA API',
+    'site_title'  => 'Lua API',
     'setConf'     => 0,
     'refetch'     => [
         'enabled'        => false,

@@ -78,6 +78,7 @@ $base  = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($title) ?></title>
   <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/favicon.ico">
 </head>
 <body>
 <div id="app">

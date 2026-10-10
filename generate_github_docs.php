@@ -6,7 +6,7 @@ define('SOURCE_DIR',   __DIR__ . '/source');
 $sources = [
     'yla' => [
         'url'         => 'https://github.com/YggdrasilWotLK/mod-yla/archive/refs/heads/master-shadows.zip',
-        'title'       => 'YLA API',
+        'title'       => 'Lua API',
         'headers_dir' => 'source/yla/src/LuaEngine/methods',
     ],
 ];
@@ -81,6 +81,7 @@ function render_full_page(string $title, string $selectedClass, string $selected
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{$title}</title>
   <link rel="stylesheet" href="{$base}/assets/style.css">
+  <link rel="icon" href="{$base}/assets/favicon.ico">
 </head>
 <body>
 <div id="app">
@@ -191,6 +192,7 @@ foreach ($classes as $className => $cls) {
 copy(__DIR__ . '/assets/style.css', $distDir . '/assets/style.css');
 copy(__DIR__ . '/assets/app.js',    $distDir . '/assets/app.js');
 copy(__DIR__ . '/assets/yla-logo.png', $distDir . '/assets/yla-logo.png');
+copy(__DIR__ . '/assets/favicon.ico', $distDir . '/assets/favicon.ico');
 
 echo 'Done. ' . count($classes) . " classes written to dist/\n";
 

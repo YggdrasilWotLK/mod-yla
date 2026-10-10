@@ -1,0 +1,64 @@
+name: Docs Pages Sync
+
+# Rebuilds the static YLA API docs on the `web` branch from the current
+# method headers on every push to master-shadows. GitHub Pages serves the
+# `docs/` folder of the `web` branch.
+#
+# NOTE: workflows only fire from the repo-root `.github/workflows`
+# directory (the legacy copies under `src/LuaEngine/.github` never run).
+
+on:
+  push:
+    branches:
+      - master-shadows
+  workflow_dispatch:
+
+concurrency:
+  group: docs-pages-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out engine source
+        uses: actions/checkout@v4
+
+      - name: Check out pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: web
+          path: site
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Sync method headers into site source
+        run: |
+          rm -rf site/source/yla
+          mkdir -p site/source/yla/src/LuaEngine
+          cp -r src/LuaEngine/methods site/source/yla/src/LuaEngine/methods
+
+      - name: Rebuild static docs
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          BRANCH_NAME: yla
+        run: |
+          cd site
+          php generate_github_docs.php
+          BRANCH_NAME=__index__ php generate_github_docs.php
+
+      - name: Commit and push pages branch
+        run: |
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add source docs
+          if git diff --cached --quiet; then
+            echo "No docs changes detected"
+          else
+            git commit -m "Sync YLA API docs from master-shadows @ ${GITHUB_SHA}"
+            git push origin web
+          fi

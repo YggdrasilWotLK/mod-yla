@@ -18,7 +18,7 @@ $isIndex    = $branchName === '__index__';
 
 define('BASE_PATH', '/' . $repoName . ($isIndex ? '' : '/' . $branchName));
 
-$distDir = __DIR__ . '/docs';
+$distDir = __DIR__ . '/dist';
 @mkdir($distDir, 0777, true);
 @mkdir($distDir . '/assets', 0777, true);
 
@@ -196,9 +196,30 @@ foreach ($classes as $className => $cls) {
 copy(__DIR__ . '/assets/style.css', $distDir . '/assets/style.css');
 copy(__DIR__ . '/assets/app.js',    $distDir . '/assets/app.js');
 
-echo 'Done. ' . count($classes) . " classes written to docs/\n";
+echo 'Done. ' . count($classes) . " classes written to dist/\n";
 
 function build_index_page(string $repoName, string $distDir, array $sources): void {
+    if (count($sources) === 1) {
+        $only = htmlspecialchars(array_key_first($sources));
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=./{$only}/">
+  <title>YLA API</title>
+</head>
+<body>
+  <p>Redirecting to the <a href="./{$only}/">YLA API</a> &hellip;</p>
+</body>
+</html>
+HTML;
+
+        file_put_contents($distDir . '/index.html', $html);
+        echo "Done. Single-source redirect written.\n";
+        return;
+    }
+
     $cards = '';
     foreach (array_keys($sources) as $key) {
         $url   = '/' . $repoName . '/' . htmlspecialchars($key) . '/';

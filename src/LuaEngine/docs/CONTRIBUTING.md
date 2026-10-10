@@ -1,19 +1,13 @@
 # Contributing
-Eluna uses C for the Lua engine, C++ for the server modifications and system code, Lua for scripting side code and scripts, python for the web documentation generation - but you do not have to be able to code to help.
+YLA is a privately managed repository. We do not recommend emulation enthusiasts to follow it. Instead, we recommend that enthusiasts contribute to the upstream mod-ale project at [azerothcore/mod-ale](https://github.com/azerothcore/mod-ale).
 
-You can contribute to Eluna in various ways:
-* Improve our documentation: [Documentation generation](DOC_GEN.md)
-* Create new features or enhance old features: [Eluna source](https://github.com/ElunaLuaEngine/Eluna)
-* Notify us about your concerns, problems and needs regarding Eluna: [Issue tracker](https://github.com/ElunaLuaEngine/Eluna/issues)
-* Create and improve Lua scripts, systems, releases and guides: [Eluna forum section](https://www.getmangos.eu/forums/forum/118-eluna-lua-engine/)
+If you use YLA in your server and find any issues, feel free to report bugs and/or open PRs here:
+- [YLA GitHub Issues](https://github.com/YggdrasilWotLK/mod-yla/issues)
 
-### Features and documentation
-To contribute to the source code and documentation within it, create a pull request for our github repository:
-
+To contribute source or documentation changes:
 1. [Set up git](https://help.github.com/articles/set-up-git/)
-2. [Fork](https://help.github.com/articles/fork-a-repo/) our repository: [Eluna repository](https://github.com/ElunaLuaEngine/Eluna)
-3. Create a branch: `git checkout -b mybranch`
-4. Make your contribution changes
-5. Commit your changes `git commit -a -m "commit message"`
-6. Push your commit to github: `git push`
-7. Open a [pull request](https://help.github.com/articles/using-pull-requests/)
+2. Fork our repository and create a branch: `git checkout -b mybranch`
+3. Make your contribution changes (see [Documentation generation](DOC_GEN.md) for the documentation standards)
+4. Commit your changes `git commit -a -m "commit message"`
+5. Push your commit to github: `git push`
+6. Open a [pull request](https://help.github.com/articles/using-pull-requests/)

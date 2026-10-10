@@ -1,24 +1,24 @@
-# Eluna features
-This article contains information about features and important notes regarding Eluna.
+# YLA features
+This article contains information about features and important notes regarding YLA.
 
 ## Settings
-Eluna has some settings in the server configuration file.
-It is important that you use the new configuration file that you get from compiling after adding Eluna. If the new configuration file is not used you will not receive any error log or output to console.
+YLA has some settings in the server configuration file.
+It is important that you use the new configuration file that you get from compiling after adding YLA. If the new configuration file is not used you will not receive any error log or output to console.
 
 The configuration file includes at least the following settings:
-- enable and disable Eluna
-- enable and disable traceback function - this adds extra debug information if you have the default Eluna extensions.
+- enable and disable YLA
+- enable and disable traceback function - this adds extra debug information if you have the default YLA extensions.
 - configure script folder location
-- configure Eluna logging settings
+- configure YLA logging settings
 
 ## Reloading
-To make testing easier it is good to know that Eluna scripts can be reloaded by using the command `.reload eluna`.
+To make testing easier it is good to know that YLA scripts can be reloaded by using the command `.reload yla`.
 However this command should be used for development purposes __ONLY__. If you are having issues getting something working __restart__ the server.
 
 It is important to know that reloading does not trigger for example the login hook for players that are already logged in when reloading.
 
 ## Script loading
-Eluna loads scripts from the `lua_scripts` folder by default. You can configure the folder name and location in the server configuration file.
+YLA loads scripts from the `lua_scripts` folder by default. You can configure the folder name and location in the server configuration file.
 Any hidden folders are not loaded. All script files must have an unique name, otherwise an error is printed and only the first file found is loaded.
 
 The loading order is not guaranteed to be alphabetic.
@@ -31,7 +31,7 @@ The whole script folder structure is added automatically to the lua require path
 In C++ level code you have types like `Unit` and `Creature` and `Player`.
 When in code you have an object of type `Unit` you need to convert it to a `Creature` or a `Player` object to be able to access the methods of the subclass.
 
-In Eluna this is automatic. All objects are automatically converted to the correct type and you will always have full access to all member functions of an object.
+In YLA this is automatic. All objects are automatically converted to the correct type and you will always have full access to all member functions of an object.
 
 ## Storing userdata
 Storing userdata objects over time that are memory managed by C++ is a bad idea.
@@ -43,7 +43,7 @@ Instead of storing the object itself you can use store guids `player:GetGUID()` 
 Any userdata object that is memory managed by lua is safe to store over time. These objects include but are not limited to: query results, worldpackets, uint64 and int64 numbers.
 
 ## Userdata metamethods
-All userdata objects in Eluna have tostring metamethod implemented.
+All userdata objects in YLA have tostring metamethod implemented.
 This allows you to print the player object for example and to use `tostring(player)`.
 
 The userdata uses metatables that contain the methods and functions it uses.

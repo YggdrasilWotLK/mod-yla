@@ -52,11 +52,11 @@ jobs:
       - name: Rebuild static docs
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
-          BRANCH_NAME: yla
         run: |
           cd site
           php generate_github_docs.php
-          BRANCH_NAME=__index__ php generate_github_docs.php
+          mkdir -p docs
+          cp -r dist/. docs/
 
       - name: Commit source snapshot to pages branch
         run: |

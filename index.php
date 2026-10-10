@@ -70,13 +70,21 @@ $allMethods   = $currentClass ? get_all_methods($selectedClass, $classes) : [];
 
 $title = $config['site_title'];
 $base  = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+
+if ($selectedMethod !== '' && $selectedClass !== '') {
+    $pageTitle = $selectedClass . ':' . $selectedMethod . ' - YLA';
+} elseif ($selectedClass !== '') {
+    $pageTitle = $selectedClass . ' - YLA';
+} else {
+    $pageTitle = 'YLA Lua API';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($title) ?></title>
+  <title><?= htmlspecialchars($pageTitle) ?></title>
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="assets/favicon.ico">
 </head>

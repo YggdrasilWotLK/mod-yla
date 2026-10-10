@@ -73,13 +73,21 @@ function render_full_page(string $title, string $selectedClass, string $selected
     include __DIR__ . '/partials/content.php';
     $content = ob_get_clean();
 
+    if ($selectedMethod !== '' && $selectedClass !== '') {
+        $pageTitle = htmlspecialchars($selectedClass . ':' . $selectedMethod . ' - YLA');
+    } elseif ($selectedClass !== '') {
+        $pageTitle = htmlspecialchars($selectedClass . ' - YLA');
+    } else {
+        $pageTitle = 'YLA Lua API';
+    }
+
     $html = <<<HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{$title}</title>
+  <title>{$pageTitle}</title>
   <link rel="stylesheet" href="{$base}/assets/style.css">
   <link rel="icon" href="{$base}/assets/favicon.ico">
 </head>

@@ -11,24 +11,19 @@ $sources = [
     ],
 ];
 
-$repo       = getenv('GITHUB_REPOSITORY') ?: '';
-$repoName   = $repo ? explode('/', $repo)[1] : '';
-$branchName = getenv('BRANCH_NAME') ?: '';
-$isIndex    = $branchName === '__index__';
+$repo     = getenv('GITHUB_REPOSITORY') ?: '';
+$repoName = $repo ? explode('/', $repo)[1] : '';
 
-define('BASE_PATH', '/' . $repoName . ($isIndex ? '' : '/' . $branchName));
+// Single flat site served from the repository root: no per-branch nesting.
+define('BASE_PATH', '/' . $repoName);
 
 $distDir = __DIR__ . '/dist';
 @mkdir($distDir, 0777, true);
 @mkdir($distDir . '/assets', 0777, true);
 
-if ($isIndex) {
-    build_index_page($repoName, $distDir, $sources);
-    exit;
-}
-
-if (!isset($sources[$branchName])) {
-    echo "No source mapping for: {$branchName}\n";
+$sourceKey = 'yla';
+if (!isset($sources[$sourceKey])) {
+    echo "No source mapping for: {$sourceKey}\n";
     exit(1);
 }
 
@@ -36,8 +31,8 @@ require_once __DIR__ . '/parse.php';
 require_once __DIR__ . '/render.php';
 
 $config = [
-    'headers_dir' => __DIR__ . '/' . $sources[$branchName]['headers_dir'],
-    'site_title'  => $sources[$branchName]['title'],
+    'headers_dir' => __DIR__ . '/' . $sources[$sourceKey]['headers_dir'],
+    'site_title'  => $sources[$sourceKey]['title'],
     'setConf'     => 1,
     'refetch'     => ['enabled' => false, 'interval_unit' => 'days', 'interval_value' => 1, 'last_fetched' => 0, 'zip_url' => '', 'dest_key' => ''],
 ];
@@ -198,77 +193,3 @@ copy(__DIR__ . '/assets/app.js',    $distDir . '/assets/app.js');
 
 echo 'Done. ' . count($classes) . " classes written to dist/\n";
 
-function build_index_page(string $repoName, string $distDir, array $sources): void {
-    if (count($sources) === 1) {
-        $only = htmlspecialchars(array_key_first($sources));
-        $html = <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=./{$only}/">
-  <title>YLA API</title>
-</head>
-<body>
-  <p>Redirecting to the <a href="./{$only}/">YLA API</a> &hellip;</p>
-</body>
-</html>
-HTML;
-
-        file_put_contents($distDir . '/index.html', $html);
-        echo "Done. Single-source redirect written.\n";
-        return;
-    }
-
-    $cards = '';
-    foreach (array_keys($sources) as $key) {
-        $url   = '/' . $repoName . '/' . htmlspecialchars($key) . '/';
-        $label = htmlspecialchars($key);
-        $cards .= <<<HTML
-      <a class="branch-card" href="{$url}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-        {$label}
-      </a>
-HTML;
-    }
-
-    $html = <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YLA API</title>
-  <style>
-    :root { --bg: #0f0f14; --surface: #16161f; --border: #2a2a3d; --purple: #9d6fdb; --purple2: #7c4fc4; --purple3: #c9a0ff; --text: #d4d4e8; --muted: #6e6e96; }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .container { text-align: center; padding: 40px 20px; }
-    h1 { font-size: 28px; font-weight: 700; color: var(--purple3); margin-bottom: 10px; }
-    .sub { color: var(--muted); font-size: 15px; margin-bottom: 36px; }
-    .branches { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 700px; }
-    .branch-card { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--purple3); font-size: 15px; font-weight: 600; text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
-    .branch-card:hover { background: var(--purple2); border-color: var(--purple); color: #fff; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <svg width="64" height="64" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 20px; display:block">
-      <circle cx="18" cy="18" r="18" fill="#6b21d6"/>
-      <text x="18" y="13" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="700" font-size="6.5" fill="#e9d5ff" letter-spacing="0.3">LUA</text>
-      <text x="18" y="23" text-anchor="middle" font-family="'Consolas',monospace" font-weight="700" font-size="7.5" fill="#f3e8ff" letter-spacing="0.5">API</text>
-      <path d="M8 27 Q18 31 28 27" stroke="#c4b5fd" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-    </svg>
-    <h1>YLA API</h1>
-    <p class="sub">Which API would you like to browse?</p>
-    <div class="branches">
-      {$cards}
-    </div>
-  </div>
-</body>
-</html>
-HTML;
-
-    file_put_contents($distDir . '/index.html', $html);
-    echo 'Done. Index page written with ' . count($sources) . " branches.\n";
-}

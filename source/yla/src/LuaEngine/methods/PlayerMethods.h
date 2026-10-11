@@ -1793,7 +1793,7 @@ namespace LuaPlayer
         uint16 currVal = YLA::CHECKVAL<uint16>(L, 4);
         uint16 maxVal = YLA::CHECKVAL<uint16>(L, 5);
 
-        player->SetSkill(id, currVal, maxVal, step);
+        player->SetSkill(id, step, currVal, maxVal);
         return 0;
     }
 
@@ -2797,13 +2797,26 @@ namespace LuaPlayer
      * Sends a vendor window to the [Player] from the [WorldObject] specified.
      *
      * @param [WorldObject] sender
+     * @param uint32 vendorId = 0 : optional entry ID to use for the vendor item list, overriding the sender's default inventory
      */
     int SendListInventory(lua_State* L, Player* player)
     {
         WorldObject* obj = YLA::CHECKOBJ<WorldObject>(L, 2);
         uint32 vendorId = YLA::CHECKVAL<uint32>(L, 3, 0);
 
+        Creature* creature = obj->ToCreature();
+        bool addedVendorFlag = false;
+        if (vendorId && creature && !creature->HasNpcFlag(UNIT_NPC_FLAG_VENDOR))
+        {
+            creature->SetNpcFlag(UNIT_NPC_FLAG_VENDOR);
+            addedVendorFlag = true;
+        }
+
         player->GetSession()->SendListInventory(obj->GET_GUID(), vendorId);
+
+        if (addedVendorFlag)
+            creature->RemoveNpcFlag(UNIT_NPC_FLAG_VENDOR);
+
         return 0;
     }
 
@@ -3223,74 +3236,112 @@ namespace LuaPlayer
 
         Quest const* quest = eObjectMgr->GetQuestTemplate(entry);
 
-        // If player doesn't have the quest
-        if (!quest || player->GetQuestStatus(entry) == QUEST_STATUS_NONE)
+        // Only handle quests that are still incomplete; this also prevents
+        // reviving failed quests and re-triggering completion side effects.
+        if (!quest || player->GetQuestStatus(entry) != QUEST_STATUS_INCOMPLETE)
             return 0;
 
-        // Add quest items for quests that require items
-        for (uint8 x = 0; x < QUEST_ITEM_OBJECTIVES_COUNT; ++x)
+        // Fill quest items by the inventory gap; reward validation ignores bank items.
+        for (uint8 i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
         {
-            uint32 id = quest->RequiredItemId[x];
-            uint32 count = quest->RequiredItemCount[x];
-
-            if (!id || !count)
+            uint32 itemId = quest->RequiredItemId[i];
+            uint32 requiredCount = quest->RequiredItemCount[i];
+            if (!itemId || !requiredCount)
                 continue;
 
-            uint32 curItemCount = player->GetItemCount(id, true);
+            uint32 currentCount = player->GetItemCount(itemId);
+            if (currentCount >= requiredCount)
+                continue;
 
+            uint32 missingCount = requiredCount - currentCount;
             ItemPosCountVec dest;
-            uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, id, count - curItemCount);
+            uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, missingCount);
             if (msg == EQUIP_ERR_OK)
             {
-                Item* item = player->StoreNewItem(dest, id, true);
-                player->SendNewItem(item, count - curItemCount, true, false);
+                Item* item = player->StoreNewItem(dest, itemId, true);
+                player->SendNewItem(item, missingCount, true, false);
             }
         }
 
-        // All creature/GO slain/cast (not required, but otherwise it will display "Creature slain 0/10")
+        // Items cannot change quest status, but re-check defensively in case of future changes.
+        if (player->GetQuestStatus(entry) != QUEST_STATUS_INCOMPLETE)
+            return 0;
+
+        // Credit creature/GO objectives by the missing count to avoid duplicate
+        // achievement updates and script hooks on repeated calls.
         for (uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
         {
-            int32 creature = quest->RequiredNpcOrGo[i];
-            uint32 creatureCount = quest->RequiredNpcOrGoCount[i];
+            int32 objective = quest->RequiredNpcOrGo[i];
+            uint32 requiredCount = quest->RequiredNpcOrGoCount[i];
+            if (!objective || !requiredCount)
+                continue;
 
-            if (creature > 0)
+            uint32 currentCount = player->GetReqKillOrCastCurrentCount(entry, objective);
+            uint32 missingCount = currentCount < requiredCount ? requiredCount - currentCount : 0;
+
+            if (objective > 0)
             {
-                if (CreatureTemplate const* creatureInfo = sObjectMgr->GetCreatureTemplate(creature))
-                    for (uint16 z = 0; z < creatureCount; ++z)
+                if (CreatureTemplate const* creatureInfo = sObjectMgr->GetCreatureTemplate(objective))
+                    for (uint32 count = 0; count < missingCount; ++count)
                         player->KilledMonster(creatureInfo, ObjectGuid::Empty);
             }
-            else if (creature < 0)
-                for (uint16 z = 0; z < creatureCount; ++z)
-                    player->KillCreditGO(creature);
+            else
+            {
+                // RequiredNpcOrGo stores GO entries as negative values; KillCreditGO
+                // expects a positive entry. Negate via int64 to avoid UB on INT32_MIN.
+                uint32 goEntry = static_cast<uint32>(-static_cast<int64>(objective));
+                for (uint32 count = 0; count < missingCount; ++count)
+                    player->KillCreditGO(goEntry);
+            }
         }
 
+        // Player kill objective; the API itself clamps to the actual missing count.
+        if (quest->HasSpecialFlag(QUEST_SPECIAL_FLAGS_PLAYER_KILL))
+            if (uint32 requiredPlayers = quest->GetPlayersSlain())
+                player->KilledPlayerCreditForQuest(requiredPlayers, quest);
 
-        // If the quest requires reputation to complete
-        if (uint32 repFaction = quest->GetRepObjectiveFaction())
+        // Exploration/event objective; the API skips it unless the quest is incomplete.
+        if (quest->HasSpecialFlag(QUEST_SPECIAL_FLAGS_EXPLORATION_OR_EVENT))
+            player->AreaExploredOrEventHappens(entry);
+
+        // Reputation objectives (mirrors cs_quest.cpp): compare as int32 and
+        // cast to float for SetReputation.
+        if (uint32 factionId = quest->GetRepObjectiveFaction())
         {
-            uint32 repValue = quest->GetRepObjectiveValue();
-            uint32 curRep = player->GetReputationMgr().GetReputation(repFaction);
-            if (curRep < repValue)
-                if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(repFaction))
-                    player->GetReputationMgr().SetReputation(factionEntry, repValue);
+            int32 requiredValue = quest->GetRepObjectiveValue();
+            if (player->GetReputationMgr().GetReputation(factionId) < requiredValue)
+            {
+                if (FactionEntry const* faction = sFactionStore.LookupEntry(factionId))
+                    player->GetReputationMgr().SetReputation(faction, static_cast<float>(requiredValue));
+            }
         }
 
-        // If the quest requires a SECOND reputation to complete
-        if (uint32 repFaction = quest->GetRepObjectiveFaction2())
+        if (uint32 factionId = quest->GetRepObjectiveFaction2())
         {
-            uint32 repValue2 = quest->GetRepObjectiveValue2();
-            uint32 curRep = player->GetReputationMgr().GetReputation(repFaction);
-            if (curRep < repValue2)
-                if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(repFaction))
-                    player->GetReputationMgr().SetReputation(factionEntry, repValue2);
+            int32 requiredValue = quest->GetRepObjectiveValue2();
+            if (player->GetReputationMgr().GetReputation(factionId) < requiredValue)
+            {
+                if (FactionEntry const* faction = sFactionStore.LookupEntry(factionId))
+                    player->GetReputationMgr().SetReputation(faction, static_cast<float>(requiredValue));
+            }
         }
 
-        // If the quest requires money
-        int32 ReqOrRewMoney = quest->GetRewOrReqMoney();
-        if (ReqOrRewMoney < 0)
-            player->ModifyMoney(-ReqOrRewMoney);
+        // Fill the money requirement by the gap; a negative value means money the
+        // player must pay. Negate via int64 to avoid UB on INT32_MIN.
+        int32 requiredMoney = quest->GetRewOrReqMoney(player->GetLevel());
+        if (requiredMoney < 0)
+        {
+            uint32 money = static_cast<uint32>(-static_cast<int64>(requiredMoney));
+            if (player->GetMoney() < money)
+                player->ModifyMoney(money - player->GetMoney());
+        }
 
-        player->CompleteQuest(entry);
+        // Credit APIs may auto-complete the quest when the last objective is satisfied,
+        // and Player::CompleteQuest is not idempotent (script hooks, aura updates,
+        // quest tracker). Call it only once while the quest is still incomplete.
+        if (player->GetQuestStatus(entry) == QUEST_STATUS_INCOMPLETE)
+            player->CompleteQuest(entry);
+
         return 0;
     }
 
@@ -5385,6 +5436,78 @@ namespace LuaPlayer
     }
 
     /**
+     * Returns the [Quest] ID for the quest in the specified quest log slot.
+     *
+     * @param uint16 slot : quest log slot
+     * @return uint32 questId : quest ID or 0 if slot is invalid
+     */
+    int GetQuestSlotQuestId(lua_State* L, Player* player)
+    {
+        uint16 slot = YLA::CHECKVAL<uint16>(L, 2);
+        if (slot > MAX_QUEST_LOG_SIZE)
+            return 0;
+
+        YLA::Push(L, player->GetQuestSlotQuestId(slot));
+        return 1;
+    }
+
+    /**
+     * Sets whether the [Player] can fly.
+     *
+     * @param bool activate = false : true to enable flying, false to disable
+     */
+    int SetCanFly(lua_State* L, Player* player)
+    {
+        bool activate = YLA::CHECKVAL<bool>(L, 2, false);
+        player->SetCanFly(activate);
+        return 0;
+    }
+
+    /**
+     * Applies a rating modifier to the [Player].
+     *
+     * @param int32 stat : combat rating type (see CombatRating enum)
+     * @param float value : rating value to apply
+     * @param bool apply = false : true to apply the modifier, false to remove it
+     */
+    int ApplyRatingMod(lua_State* L, Player* player)
+    {
+        int32 stat = YLA::CHECKVAL<int32>(L, 2);
+
+        float value = YLA::CHECKVAL<float>(L, 3);
+        bool apply = YLA::CHECKVAL<bool>(L, 4, false);
+
+        player->ApplyRatingMod(CombatRating(stat), value, apply);
+        return 0;
+    }
+
+    /**
+     * Returns the [Player]s spent talent points in each talent tree for the active spec
+     *
+     * @return uint8 tree1, uint8 tree2, uint8 tree3
+     */
+    int GetTalentTreePoints(lua_State* L, Player* player)
+    {
+        uint8 specPoints[3] = {0, 0, 0};
+        player->GetTalentTreePoints(specPoints);
+        YLA::Push(L, specPoints[0]);
+        YLA::Push(L, specPoints[1]);
+        YLA::Push(L, specPoints[2]);
+        return 3;
+    }
+
+    /**
+     * Returns the index of the talent tree the [Player] has spent the most points in for the active spec
+     *
+     * @return uint8 treeIndex
+     */
+    int GetMostPointsTalentTree(lua_State* L, Player* player)
+    {
+        YLA::Push(L, player->GetMostPointsTalentTree());
+        return 1;
+    }
+
+    /**
      * Returns the [Player]'s dodge chance from agility.
      *
      * @return float dodgeChance : dodge percentage from agility stat
@@ -5446,6 +5569,72 @@ namespace LuaPlayer
         if (slot >= BANK_SLOT_ITEM_END)
             return 1;
         YLA::Push(L, player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot + BANK_SLOT_ITEM_START));
+        return 1;
+    }
+
+    /**
+     * Returns the number of free slots in the [Player]'s inventory (backpack and equipped bags).
+     *
+     * @return uint32 freeSlots
+     */
+    int GetInventoryFreeSlots(lua_State* L, Player* player)
+    {
+        uint32 freeSlots = 0;
+
+        // Backpack slots in INVENTORY_SLOT_BAG_0 (INVENTORY_SLOT_ITEM_START to INVENTORY_SLOT_ITEM_END)
+        for (uint8 i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
+        {
+            if (!player->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+                ++freeSlots;
+        }
+
+        // Check equipped bags slots (INVENTORY_SLOT_BAG_START to INVENTORY_SLOT_BAG_END)
+        for (uint8 i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
+        {
+            if (Bag* bag = player->GetBagByPos(i))
+            {
+                for (uint32 j = 0; j < bag->GetBagSize(); ++j)
+                {
+                    if (!player->GetItemByPos(i, j))
+                        ++freeSlots;
+                }
+            }
+        }
+
+        YLA::Push(L, freeSlots);
+        return 1;
+    }
+
+    /**
+     * Returns the number of free slots in the [Player]'s bank (main bank and bank bags).
+     *
+     * @return uint32 freeSlots
+     */
+    int GetBankFreeSlots(lua_State* L, Player* player)
+    {
+        uint32 freeSlots = 0;
+
+        // Check main bank slots (BANK_SLOT_ITEM_START to BANK_SLOT_ITEM_END)
+        for (uint8 i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; ++i)
+        {
+            if (!player->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+                ++freeSlots;
+        }
+
+        // Check bank bags slots (BANK_SLOT_BAG_START to BANK_SLOT_BAG_END)
+        for (uint8 i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
+        {
+            if (Bag* bag = player->GetBagByPos(i))
+            {
+                for (uint32 j = 0; j < bag->GetBagSize(); ++j)
+                {
+                    if (!player->GetItemByPos(i, j))
+                        ++freeSlots;
+                }
+            }
+        }
+
+        YLA::Push(L, freeSlots);
         return 1;
     }
 

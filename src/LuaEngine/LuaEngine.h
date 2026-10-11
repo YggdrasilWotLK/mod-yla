@@ -352,6 +352,7 @@ public:
     BindingMap< EventKey<Hooks::TicketEvents> >*        TicketEventBindings;
     BindingMap< EntryKey<Hooks::SpellEvents> >*         SpellEventBindings;
     BindingMap< EntryKey<Hooks::AuraEvents> >*          AuraEventBindings;
+    BindingMap< EventKey<Hooks::UnitEvents> >*          UnitEventBindings;
 
     BindingMap< UniqueObjectKey<Hooks::CreatureEvents> >*  CreatureUniqueBindings;
 
@@ -611,6 +612,10 @@ public:
     void OnInstallAccessory(Vehicle* vehicle, Creature* accessory);
     void OnAddPassenger(Vehicle* vehicle, Unit* passenger, int8 seatId);
     void OnRemovePassenger(Vehicle* vehicle, Unit* passenger);
+
+    /* Unit */
+    void OnUnitDisplayIdChange(Unit* unit, uint32 displayId);
+    void OnUnitShapeshiftForm(Unit* unit, uint8 form);
 
     /* AreaTrigger */
     bool OnAreaTrigger(Player* pPlayer, AreaTriggerEntry const* pTrigger);

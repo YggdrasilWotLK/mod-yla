@@ -1338,6 +1338,18 @@ public:
         if (attacker->IsCreature())
             E->OnCreatureDamage(attacker->ToCreature(), receiver, damage);
     }
+
+    void OnDisplayIdChange(Unit* unit, uint32 displayId) override
+    {
+        if (!unit) return;
+        YLA::GetMapStateOrGlobal(unit->GetMapId(), unit->GetInstanceId())->OnUnitDisplayIdChange(unit, displayId);
+    }
+
+    void OnUnitSetShapeshiftForm(Unit* unit, uint8 form) override
+    {
+        if (!unit) return;
+        YLA::GetMapStateOrGlobal(unit->GetMapId(), unit->GetInstanceId())->OnUnitShapeshiftForm(unit, form);
+    }
 };
 
 void AddSC_YLA()

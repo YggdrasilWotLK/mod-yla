@@ -5434,18 +5434,14 @@ namespace LuaPlayer
     }
 
     /**
-     * Returns `true` if the [Player] is a Playerbot/RNDBot, `false` otherwise.
+     * Returns `true` if the [Player] is a Shadows bot, `false` otherwise.
      *
      * @return bool isBot
      */
     int IsBot(lua_State* L, Player* player)
     {
-    #if defined(MOD_PLAYERBOTS)
-        YLA::Push(L, player->GetSession()->IsBot());
-    #else
-        (void)player;
-        YLA::Push(L, false);
-    #endif
+        WorldSession* session = player ? player->GetSession() : nullptr;
+        YLA::Push(L, session && session->IsBot());
         return 1;
     }
 };

@@ -142,15 +142,32 @@ function render_full_page(string $title, string $selectedClass, string $selected
         const url = h.type === 'class'
           ? base + '/' + encodeURIComponent(h.name) + '/'
           : base + '/' + encodeURIComponent(h.class) + '/' + encodeURIComponent(h.name) + '/';
-        const sub = h.type === 'method' ? '<span class="sr-class">' + h.class + '.</span>' : '';
+        const sub = h.type === 'method' ? '<span class="sr-class">' + escHtml(h.class) + '.</span>' : '';
         return '<div class="sr-item" onclick="location.href=\'' + url + '\'">'
           + '<span class="sr-badge ' + h.type + '">' + h.type + '</span>'
-          + sub + '<span class="sr-name">' + h.name + '</span>'
-          + '<span class="sr-desc">' + (h.desc || '') + '</span>'
+          + sub + '<span class="sr-name">' + escHtml(h.name) + '</span>'
+          + '<span class="sr-desc">' + fmtSearch(h.desc || '') + '</span>'
           + '</div>';
       }).join('');
       srBox.classList.add('open');
     });
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    // Minimal mirror of render.php's render_links() for search excerpts.
+    function fmtSearch(s) {
+      let h = escHtml(s);
+      h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      h = h.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+      h = h.replace(/\[(\w+):(\w+)\]/g, function(m, c, mn) {
+        return '<a class="doc-link" href="' + base + '/' + encodeURIComponent(c) + '/' + encodeURIComponent(mn) + '/">' + c + ':' + mn + '</a>';
+      });
+      h = h.replace(/\[(\w+)\]/g, function(m, c) {
+        return '<a class="doc-link" href="' + base + '/' + encodeURIComponent(c) + '/">' + c + '</a>';
+      });
+      return h;
+    }
     document.addEventListener('click', function(e) {
       if (!srInput.contains(e.target) && !srBox.contains(e.target)) {
         srBox.classList.remove('open');

@@ -90,6 +90,7 @@ namespace Hooks
         REGTYPE_SPELL,
         REGTYPE_ALL_CREATURE,
         REGTYPE_AURA,
+        REGTYPE_AREATRIGGER,
         REGTYPE_COUNT
     };
 
@@ -413,6 +414,13 @@ namespace Hooks
         ALL_CREATURE_EVENT_ON_SELECT_LEVEL              = 3, // (event, creature_template, creature)
         ALL_CREATURE_EVENT_ON_BEFORE_SELECT_LEVEL       = 4, // (event, creature_template, creature, level) - Can return the new level
         ALL_CREATURE_EVENT_COUNT
+    };
+
+    enum AreaTriggerEvents
+    {
+        AREATRIGGER_EVENT_ON_TRIGGER                    = 1, // (event, player, triggerId)
+
+        AREATRIGGER_EVENT_COUNT
     };
 };
 

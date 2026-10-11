@@ -1211,8 +1211,7 @@ namespace LuaGlobalFunctions
      * Registers an area trigger event handler for a specific area trigger entry.
      *
      * Unlike the global trigger event (see [Global:RegisterServerEvent] event 24),
-     * this fires only for the given area trigger entry. Requires the core
-     * YLAScript OnAreaTriggerEntry hook.
+     * this fires only for the given area trigger entry.
      *
      * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
      *

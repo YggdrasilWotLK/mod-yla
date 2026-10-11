@@ -178,3 +178,26 @@
     panel.scrollTop = activeMethod.offsetTop - panel.clientHeight / 2;
   }
 })();
+
+// ── SIDEBAR COLLAPSE (Docusaurus-style, desktop) ─────────────────────────────
+(function () {
+  const app         = document.getElementById('app');
+  const collapseBtn = document.getElementById('sidebar-collapse');
+  const expandBtn   = document.getElementById('sidebar-expand');
+  if (!app || !collapseBtn || !expandBtn) return;
+
+  const desktop = () => window.matchMedia('(min-width: 901px)').matches;
+
+  function setCollapsed(collapsed) {
+    app.classList.toggle('sidebar-collapsed', collapsed);
+    expandBtn.style.display = collapsed ? 'flex' : 'none';
+    try { localStorage.setItem('yla-sidebar-collapsed', collapsed ? '1' : '0'); } catch (e) {}
+  }
+
+  collapseBtn.addEventListener('click', () => setCollapsed(true));
+  expandBtn.addEventListener('click', () => setCollapsed(false));
+
+  let initial = false;
+  try { initial = localStorage.getItem('yla-sidebar-collapsed') === '1'; } catch (e) {}
+  if (initial && desktop()) setCollapsed(true);
+})();

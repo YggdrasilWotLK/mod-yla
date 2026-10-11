@@ -67,7 +67,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui,
 #theme-toggle:hover { color: var(--text); }
 
 /* ── SIDEBAR ── */
-#sidebar { grid-row: 2; display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border-right: 1px solid var(--border); min-height: 0; overflow: hidden; transition: background .2s, border-color .2s; }
+#sidebar { grid-row: 2; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; background: var(--surface); border-right: 1px solid var(--border); min-height: 0; overflow: hidden; transition: background .2s, border-color .2s; }
 #class-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-right: 1px solid var(--border); }
 #method-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 #sidebar-header { padding: 14px 14px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); flex-shrink: 0; border-bottom: 1px solid var(--border); }
@@ -91,6 +91,19 @@ html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui,
 .method-item.inherited.active { color: var(--purple3); }
 .inh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple2); flex-shrink: 0; }
 .own-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green);   flex-shrink: 0; }
+
+/* ── SIDEBAR COLLAPSE (Docusaurus-style, desktop only) ── */
+#sidebar-collapse { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px; background: none; border: none; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; cursor: pointer; }
+#sidebar-collapse:hover { color: var(--purple3); }
+#sidebar-expand { display: none; position: fixed; top: 50%; left: 0; transform: translateY(-50%); z-index: 60; align-items: center; justify-content: center; width: 22px; height: 48px; background: var(--surface2); border: 1px solid var(--border); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; color: var(--muted); cursor: pointer; }
+#sidebar-expand:hover { color: var(--purple3); }
+@media (min-width: 901px) {
+  #app.sidebar-collapsed { grid-template-columns: 0 1fr; }
+  #app.sidebar-collapsed #sidebar { display: none; }
+}
+@media (max-width: 900px) {
+  #sidebar-collapse, #sidebar-expand { display: none !important; }
+}
 
 /* ── CONTENT ── */
 #content h1 { font-size: 26px; font-weight: 700; color: var(--purple3); margin-bottom: 8px; }

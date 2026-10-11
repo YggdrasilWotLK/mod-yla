@@ -517,6 +517,8 @@ YLARegister<Unit> UnitMethods[] =
 YLARegister<Player> PlayerMethods[] =
 {
     // Getters
+    { "GetInventoryFreeSlots", &LuaPlayer::GetInventoryFreeSlots },
+    { "GetBankFreeSlots", &LuaPlayer::GetBankFreeSlots },
     { "GetSelection", &LuaPlayer::GetSelection },
     { "GetSelectionGUID", &LuaPlayer::GetSelectionGUID },
     { "GetGMRank", &LuaPlayer::GetGMRank },
@@ -597,6 +599,9 @@ YLARegister<Player> PlayerMethods[] =
     { "GetTemporaryUnsummonedPetNumber", &LuaPlayer::GetTemporaryUnsummonedPetNumber },
     { "GetLastPetNumber", &LuaPlayer::GetLastPetNumber },
     { "GetLastPetSpell", &LuaPlayer::GetLastPetSpell },
+    { "GetQuestSlotQuestId", &LuaPlayer::GetQuestSlotQuestId },
+    { "GetTalentTreePoints", &LuaPlayer::GetTalentTreePoints },
+    { "GetMostPointsTalentTree", &LuaPlayer::GetMostPointsTalentTree },
 
     // Setters
     { "SetTemporaryUnsummonedPetNumber", &LuaPlayer::SetTemporaryUnsummonedPetNumber },
@@ -655,6 +660,7 @@ YLARegister<Player> PlayerMethods[] =
     { "GetInventoryItem", &LuaPlayer::GetInventoryItem },
     { "GetBankItem", &LuaPlayer::GetBankItem },
     { "GetCreationTime", &LuaPlayer::GetCreationTime },
+    { "SetCanFly", &LuaPlayer::SetCanFly },
 
     // Boolean
     { "HasTankSpec", &LuaPlayer::HasTankSpec },
@@ -878,6 +884,7 @@ YLARegister<Player> PlayerMethods[] =
     { "SetViewpoint", &LuaPlayer::SetViewpoint },
     { "ToggleInstantFlight", &LuaPlayer::ToggleInstantFlight },
     { "SetCreationTime", &LuaPlayer::SetCreationTime },
+    { "ApplyRatingMod", &LuaPlayer::ApplyRatingMod },
 
     { NULL, NULL }
 };
@@ -1004,6 +1011,7 @@ YLARegister<Creature> CreatureMethods[] =
     { "CallForHelp", &LuaCreature::CallForHelp },
     { "CallAssistance", &LuaCreature::CallAssistance },
     { "RemoveCorpse", &LuaCreature::RemoveCorpse },
+    { "AllLootRemovedFromCorpse", &LuaCreature::AllLootRemovedFromCorpse },
     { "DespawnOrUnsummon", &LuaCreature::DespawnOrUnsummon },
     { "Respawn", &LuaCreature::Respawn },
     { "AttackStart", &LuaCreature::AttackStart },
@@ -2090,6 +2098,9 @@ void RegisterFunctions(YLA* E)
     YLATemplate<SpellEntry>::SetMethods(E, SpellEntryMethods);
 
     YLATemplate<CreatureTemplate>::Register(E, "CreatureTemplate");
+
+    YLATemplate<Loot>::Register(E, "Loot");
+    YLATemplate<Loot>::SetMethods(E, LootMethods);
 
     YLATemplate<long long>::Register(E, "long long", true);
 

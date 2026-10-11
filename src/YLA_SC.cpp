@@ -645,7 +645,8 @@ public:
         PLAYERHOOK_ON_CAN_UPDATE_SKILL,
         PLAYERHOOK_ON_BEFORE_UPDATE_SKILL,
         PLAYERHOOK_ON_UPDATE_SKILL,
-        PLAYERHOOK_CAN_RESURRECT
+        PLAYERHOOK_CAN_RESURRECT,
+        PLAYERHOOK_ON_PLAYER_RELEASED_GHOST
     }) { }
 
     // MAP
@@ -1016,6 +1017,12 @@ public:
     bool OnPlayerCanResurrect(Player* player) override
     {
         return YLA::GetMapStateOrGlobal(player->GetMapId(), player->GetInstanceId())->CanPlayerResurrect(player);
+    }
+
+    // MAP
+    void OnPlayerReleasedGhost(Player* player) override
+    {
+        YLA::GetMapStateOrGlobal(player->GetMapId(), player->GetInstanceId())->OnPlayerReleasedGhost(player);
     }
 };
 

@@ -14,7 +14,7 @@
 using namespace Hooks;
 
 #define START_HOOK_SERVER(EVENT)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA;\
     /* WORLD dispatch runs Lua on this state: hold its lock too. */\
@@ -26,7 +26,7 @@ using namespace Hooks;
         return;
 
 #define START_HOOK_PACKET(EVENT, OPCODE)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA;\
     /* WORLD dispatch runs Lua on this state: hold its lock too. */\

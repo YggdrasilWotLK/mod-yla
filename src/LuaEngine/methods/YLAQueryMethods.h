@@ -18,7 +18,7 @@
  */
 namespace LuaQuery
 {
-    static void CheckFields(lua_State* L, ALEQuery* result)
+    static void CheckFields(lua_State* L, YLAQuery* result)
     {
         uint32 field = YLA::CHECKVAL<uint32>(L, 2);
         uint32 count = RESULT->GetFieldCount();
@@ -36,7 +36,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return bool isNull
      */
-    int IsNull(lua_State* L, ALEQuery* result)
+    int IsNull(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -50,7 +50,7 @@ namespace LuaQuery
      *
      * @return uint32 columnCount
      */
-    int GetColumnCount(lua_State* L, ALEQuery* result)
+    int GetColumnCount(lua_State* L, YLAQuery* result)
     {
         YLA::Push(L, RESULT->GetFieldCount());
         return 1;
@@ -61,7 +61,7 @@ namespace LuaQuery
      *
      * @return uint32 rowCount
      */
-    int GetRowCount(lua_State* L, ALEQuery* result)
+    int GetRowCount(lua_State* L, YLAQuery* result)
     {
         if (RESULT->GetRowCount() > (uint32)-1)
             YLA::Push(L, (uint32)-1);
@@ -76,7 +76,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return bool data
      */
-    int GetBool(lua_State* L, ALEQuery* result)
+    int GetBool(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -90,7 +90,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return uint8 data
      */
-    int GetUInt8(lua_State* L, ALEQuery* result)
+    int GetUInt8(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -104,7 +104,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return uint16 data
      */
-    int GetUInt16(lua_State* L, ALEQuery* result)
+    int GetUInt16(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -118,7 +118,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return uint32 data
      */
-    int GetUInt32(lua_State* L, ALEQuery* result)
+    int GetUInt32(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -132,7 +132,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return uint64 data
      */
-    int GetUInt64(lua_State* L, ALEQuery* result)
+    int GetUInt64(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -146,7 +146,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return int8 data
      */
-    int GetInt8(lua_State* L, ALEQuery* result)
+    int GetInt8(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -160,7 +160,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return int16 data
      */
-    int GetInt16(lua_State* L, ALEQuery* result)
+    int GetInt16(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -174,7 +174,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return int32 data
      */
-    int GetInt32(lua_State* L, ALEQuery* result)
+    int GetInt32(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -188,7 +188,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return int64 data
      */
-    int GetInt64(lua_State* L, ALEQuery* result)
+    int GetInt64(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -202,7 +202,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return float data
      */
-    int GetFloat(lua_State* L, ALEQuery* result)
+    int GetFloat(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -216,7 +216,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return double data
      */
-    int GetDouble(lua_State* L, ALEQuery* result)
+    int GetDouble(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -230,7 +230,7 @@ namespace LuaQuery
      * @param uint32 column
      * @return string data
      */
-    int GetString(lua_State* L, ALEQuery* result)
+    int GetString(lua_State* L, YLAQuery* result)
     {
         uint32 col = YLA::CHECKVAL<uint32>(L, 2);
         CheckFields(L, result);
@@ -239,7 +239,7 @@ namespace LuaQuery
     }
 
     /**
-     * Advances the [ALEQuery] to the next row in the result set.
+     * Advances the [YLAQuery] to the next row in the result set.
      *
      * *Do not* call this immediately after a query, or you'll skip the first row.
      *
@@ -247,7 +247,7 @@ namespace LuaQuery
      *
      * @return bool hadNextRow
      */
-    int NextRow(lua_State* L, ALEQuery* result)
+    int NextRow(lua_State* L, YLAQuery* result)
     {
         YLA::Push(L, RESULT->NextRow());
         return 1;
@@ -266,11 +266,11 @@ namespace LuaQuery
      *
      *     { entry = 123, name = "some creature name" }
      *
-     * To move to next row use [ALEQuery:NextRow].
+     * To move to next row use [YLAQuery:NextRow].
      *
      * @return table rowData : table filled with row columns and data where `T[column] = data`
      */
-    int GetRow(lua_State* L, ALEQuery* result)
+    int GetRow(lua_State* L, YLAQuery* result)
     {
         uint32 col = RESULT->GetFieldCount();
         Field* row = RESULT->Fetch();

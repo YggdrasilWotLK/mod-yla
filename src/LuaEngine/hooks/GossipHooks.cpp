@@ -14,7 +14,7 @@
 using namespace Hooks;
 
 #define START_HOOK(BINDINGS, EVENT, ENTRY)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\
@@ -24,7 +24,7 @@ using namespace Hooks;
         return;
 
 #define START_HOOK_WITH_RETVAL(BINDINGS, EVENT, ENTRY, RETVAL)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return RETVAL;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\

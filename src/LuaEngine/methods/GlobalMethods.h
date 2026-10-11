@@ -34,13 +34,13 @@ namespace LuaGlobalFunctions
     /**
      * Returns Lua engine's name.
      *
-     * Always returns "ALEEngine" on YLA.
+     * Always returns "YLAEngine" on YLA.
      *
      * @return string engineName
      */
     int GetLuaEngine(lua_State* L)
     {
-        YLA::Push(L, "ALEEngine");
+        YLA::Push(L, "YLAEngine");
         return 1;
     }
 
@@ -1368,9 +1368,9 @@ namespace LuaGlobalFunctions
     /**
      * Reloads the Lua engine.
      */
-    int ReloadALE(lua_State* /*L*/)
+    int ReloadYLA(lua_State* /*L*/)
     {
-        YLA::ReloadALE();
+        YLA::ReloadYLA();
         return 0;
     }
 
@@ -1436,7 +1436,7 @@ namespace LuaGlobalFunctions
             {
                 E->queryProcessor.AddCallback(db.AsyncQuery(query).WithCallback([funcRef, owner, gen](QueryResult result)
             {
-                ALEQuery* eq = result ? new ALEQuery(result) : nullptr;
+                YLAQuery* eq = result ? new YLAQuery(result) : nullptr;
 
                 LOCK_YLA;
                 auto state = YLA::LockStateRef(owner);
@@ -1496,7 +1496,7 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Executes a SQL query on the world database and returns an [ALEQuery].
+     * Executes a SQL query on the world database and returns an [YLAQuery].
      *
      * The query is always executed synchronously
      *   (i.e. execution halts until the query has finished and then results are returned).
@@ -1511,7 +1511,7 @@ namespace LuaGlobalFunctions
      *     end
      *
      * @param string sql : query to execute
-     * @return [ALEQuery] results or nil if no rows found or nil if no rows found
+     * @return [YLAQuery] results or nil if no rows found or nil if no rows found
      */
     int WorldDBQuery(lua_State* L)
     {
@@ -1521,16 +1521,16 @@ namespace LuaGlobalFunctions
         if (numArgs > 1)
             query = YLA::FormatQuery(L, query).c_str();
 
-        ALEQuery result = WorldDatabase.Query(query);
+        YLAQuery result = WorldDatabase.Query(query);
         if (result)
-            YLA::Push(L, new ALEQuery(result));
+            YLA::Push(L, new YLAQuery(result));
         else
             YLA::Push(L);
         return 1;
     }
 
     /**
-     * Executes an asynchronous SQL query on the world database and passes an [ALEQuery] to a callback function.
+     * Executes an asynchronous SQL query on the world database and passes an [YLAQuery] to a callback function.
      *
      * The query is executed asynchronously
      *   (i.e. the server keeps running while the query is executed in parallel, and results are passed to a callback function).
@@ -1579,7 +1579,7 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Executes a SQL query on the character database and returns an [ALEQuery].
+     * Executes a SQL query on the character database and returns an [YLAQuery].
      *
      * The query is always executed synchronously
      *   (i.e. execution halts until the query has finished and then results are returned).
@@ -1588,7 +1588,7 @@ namespace LuaGlobalFunctions
      * For an example see [Global:WorldDBQuery].
      *
      * @param string sql : query to execute
-     * @return [ALEQuery] results or nil if no rows found
+     * @return [YLAQuery] results or nil if no rows found
      */
     int CharDBQuery(lua_State* L)
     {
@@ -1607,7 +1607,7 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Executes an asynchronous SQL query on the character database and passes an [ALEQuery] to a callback function.
+     * Executes an asynchronous SQL query on the character database and passes an [YLAQuery] to a callback function.
      *
      * The query is executed asynchronously
      *   (i.e. the server keeps running while the query is executed in parallel, and results are passed to a callback function).
@@ -1649,7 +1649,7 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Executes a SQL query on the login database and returns an [ALEQuery].
+     * Executes a SQL query on the login database and returns an [YLAQuery].
      *
      * The query is always executed synchronously
      *   (i.e. execution halts until the query has finished and then results are returned).
@@ -1658,7 +1658,7 @@ namespace LuaGlobalFunctions
      * For an example see [Global:WorldDBQuery].
      *
      * @param string sql : query to execute
-     * @return [ALEQuery] results or nil if no rows found
+     * @return [YLAQuery] results or nil if no rows found
      */
     int AuthDBQuery(lua_State* L)
     {
@@ -1677,7 +1677,7 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Executes an asynchronous SQL query on the character database and passes an [ALEQuery] to a callback function.
+     * Executes an asynchronous SQL query on the character database and passes an [YLAQuery] to a callback function.
      *
      * The query is executed asynchronously
      *   (i.e. the server keeps running while the query is executed in parallel, and results are passed to a callback function).
@@ -3989,7 +3989,7 @@ namespace LuaGlobalFunctions
     {
         YLA* E = YLA::GetYLA(L);
         const char* key = YLA::CHECKVAL<const char*>(L, 1);
-        uint64 box = ALEMapStateKey(E->GetStateMapId(), E->GetStateInstanceId());
+        uint64 box = YLAMapStateKey(E->GetStateMapId(), E->GetStateInstanceId());
         // Marshal before locking: value size is unbounded, lock covers the insert only.
         bool erase = lua_isnoneornil(L, 2);
         std::string serialized;
@@ -4022,7 +4022,7 @@ namespace LuaGlobalFunctions
         uint32 mapId = YLA::CHECKVAL<uint32>(L, 1);
         uint32 instanceId = YLA::CHECKVAL<uint32>(L, 2);
         const char* key = YLA::CHECKVAL<const char*>(L, 3);
-        uint64 box = ALEMapStateKey(mapId, instanceId);
+        uint64 box = YLAMapStateKey(mapId, instanceId);
 
         // Copy out under lock, decode after: blob size is unbounded.
         std::string blob;

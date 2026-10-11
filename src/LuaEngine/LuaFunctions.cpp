@@ -171,7 +171,7 @@ YLAGlobalRegister GlobalMethods[] =
     { "CanFlyInWintergrasp", &LuaGlobalFunctions::CanFlyInWintergrasp },
 
     // Other
-    { "ReloadALE", &LuaGlobalFunctions::ReloadALE },
+    { "ReloadYLA", &LuaGlobalFunctions::ReloadYLA },
     { "RunCommand", &LuaGlobalFunctions::RunCommand },
     { "SendWorldMessage", &LuaGlobalFunctions::SendWorldMessage, METHOD_REG_WORLD },
     { "WorldDBQuery", &LuaGlobalFunctions::WorldDBQuery },
@@ -1315,7 +1315,7 @@ YLARegister<Vehicle> VehicleMethods[] =
     { NULL, NULL }
 };
 
-YLARegister<ALEQuery> QueryMethods[] =
+YLARegister<YLAQuery> QueryMethods[] =
 {
     // Getters
     { "GetColumnCount", &LuaQuery::GetColumnCount },
@@ -2067,8 +2067,8 @@ void RegisterFunctions(YLA* E)
     YLATemplate<WorldPacket>::Register(E, "WorldPacket", true);
     YLATemplate<WorldPacket>::SetMethods(E, PacketMethods);
 
-    YLATemplate<ALEQuery>::Register(E, "ALEQuery", true);
-    YLATemplate<ALEQuery>::SetMethods(E, QueryMethods);
+    YLATemplate<YLAQuery>::Register(E, "YLAQuery", true);
+    YLATemplate<YLAQuery>::SetMethods(E, QueryMethods);
 
     YLATemplate<AchievementEntry>::Register(E, "AchievementEntry");
     YLATemplate<AchievementEntry>::SetMethods(E, AchievementMethods);

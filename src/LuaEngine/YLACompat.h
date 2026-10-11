@@ -4,8 +4,8 @@
  * Please see the included DOCS/LICENSE.md for more information
  */
 
-#ifndef ALECOMPAT_H
-#define ALECOMPAT_H
+#ifndef YLACOMPAT_H
+#define YLACOMPAT_H
 
 extern "C"
 {

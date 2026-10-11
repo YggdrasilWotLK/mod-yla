@@ -2,6 +2,7 @@ name: Build mod-yla with LuaJIT 🌙
 
 on:
   push:
+    branches: [master-shadows]
   pull_request:
 
 jobs:

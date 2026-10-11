@@ -14,6 +14,9 @@ concurrency:
 jobs:
   install_and_build:
     runs-on: ubuntu-24.04
+    env:
+      CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime
+      CCACHE_CPP2: "true"
     steps:
       - name: Check out YggdrasilCore 🧑‍💻
         uses: actions/checkout@v4
@@ -21,48 +24,43 @@ jobs:
           repository: 'YggdrasilWotLK/yggdrasilcore'
           ref: 'master-shadows'
           submodules: 'recursive'
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Check out module repository 📂
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
           path: 'modules/${{ github.event.repository.name }}'
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
 
       - name: Check out mod-shadows 🤖
         uses: actions/checkout@v4
         with:
           repository: 'YggdrasilWotLK/mod-shadows'
           ref: 'master'
-          submodules: 'recursive'
           path: 'modules/mod-shadows'
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Cache compilation artifacts 💾
-        uses: actions/cache@v4
+      - name: Ccache 💾
+        uses: hendrikmuhs/ccache-action@v1
         with:
-          path: var/ccache
-          key: ccache:${{ matrix.compiler.CC }}:${{ github.ref }}:${{ github.sha }}
+          key: mod-yla-clang-18-${{ inputs.lua_version }}-${{ github.ref_name }}
           restore-keys: |
-            ccache:clang-18:${{ github.ref }}
-            ccache:clang-18
+            mod-yla-clang-18-${{ inputs.lua_version }}-
+            mod-yla-clang-18-
+          max-size: 1000M
 
       - name: Install build dependencies 🧰
         shell: bash
         run: |
-          sudo apt update
-          sudo apt-get -y install ccache clang cmake curl google-perftools \
-            libmysqlclient-dev make unzip build-essential cmake-data \
-            libboost-all-dev libbz2-dev libncurses5-dev libmysql++-dev \
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ccache ninja-build cppcheck \
+            libmysqlclient-dev libboost-all-dev libbz2-dev libncurses5-dev libmysql++-dev \
             libreadline6-dev libssl-dev libtool openssl zlib1g-dev
 
       - name: Build mod-yla with ${{ inputs.lua_version }} 🏗️
         run: |
-          rm -rf build
-          mkdir build && cd build
-          cmake .. \
+          cmake -G Ninja -B build -S . \
             -DCMAKE_C_COMPILER=clang-18 \
             -DCMAKE_CXX_COMPILER=clang++-18 \
             -DSCRIPTS="static" \
@@ -74,13 +72,10 @@ jobs:
             -DCMAKE_C_FLAGS="-DMOD_PLAYERBOTS" \
             -DCMAKE_CXX_FLAGS="-DMOD_PLAYERBOTS" \
             -DLUA_VERSION=${{ inputs.lua_version }}
-          make -j$(nproc)
-          cd ..
+          cmake --build build --parallel $(nproc)
 
       - name: Run Cppcheck for static code analysis 🔍
         run: |
-          sudo apt update -y
-          sudo apt install -y cppcheck
           cd modules/${{ github.event.repository.name }}
           cppcheck -j$(nproc) --force --inline-suppr \
             -I src/LuaEngine/ \

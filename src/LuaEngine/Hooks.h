@@ -91,6 +91,7 @@ namespace Hooks
         REGTYPE_ALL_CREATURE,
         REGTYPE_AURA,
         REGTYPE_UNIT,
+        REGTYPE_AREATRIGGER,
         REGTYPE_COUNT
     };
 
@@ -422,6 +423,13 @@ namespace Hooks
         UNIT_EVENT_ON_SHAPESHIFT_FORM                   = 2, // (event, unit, form)
 
         UNIT_EVENT_COUNT
+    };
+
+    enum AreaTriggerEvents
+    {
+        AREATRIGGER_EVENT_ON_TRIGGER                    = 1, // (event, player, triggerId)
+
+        AREATRIGGER_EVENT_COUNT
     };
 };
 

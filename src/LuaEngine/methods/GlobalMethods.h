@@ -1234,6 +1234,35 @@ namespace LuaGlobalFunctions
     }
 
     /**
+     * Registers an area trigger event handler for a specific area trigger entry.
+     *
+     * Unlike the global trigger event (see [Global:RegisterServerEvent] event 24),
+     * this fires only for the given area trigger entry.
+     *
+     * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
+     *
+     * In Compatibility mode, all events are registered to the WORLD state (-1).
+     *
+     * @table
+     * @columns [ID, Event, State, Parameters, Comment]
+     * @values [1, AREATRIGGER_EVENT_ON_TRIGGER, "MAP", <event: number, player: Player, triggerId: number>, ""]
+     *
+     * @proto cancel = (entry, event, function)
+     * @proto cancel = (entry, event, function, shots)
+     *
+     * @param uint32 entry : area trigger entry ID
+     * @param uint32 event : refer to table above
+     * @param function function : function that will be called when the event occurs
+     * @param uint32 shots = 0 : the number of times the function will be called, 0 means "always call this function"
+     *
+     * @return function cancel : a function that cancels the binding when called
+     */
+    int RegisterAreaTriggerEvent(lua_State* L)
+    {
+        return RegisterEntryHelper(L, Hooks::REGTYPE_AREATRIGGER);
+    }
+
+    /**
      * Registers a [Creature] event handler for a *single* [Creature].
      *
      * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
@@ -2960,6 +2989,39 @@ namespace LuaGlobalFunctions
             uint32 entry = YLA::CHECKVAL<uint32>(L, 1);
             uint32 event_type = YLA::CHECKVAL<uint32>(L, 2);
             YLA::GetYLA(L)->CreatureEventBindings->Clear(Key((Hooks::CreatureEvents)event_type, entry));
+        }
+        return 0;
+    }
+
+    /**
+     * Unbinds area trigger event handlers for one area trigger entry.
+     *
+     * If `event_type` is `nil`, all event handlers for `entry` are cleared.
+     *
+     * Otherwise, only event handlers for `event_type` are cleared.
+     *
+     * @proto (entry)
+     * @proto (entry, event_type)
+     * @param uint32 entry : area trigger entry ID, see [Global:RegisterAreaTriggerEvent]
+     * @param uint32 event_type : the event whose handlers will be cleared, see [Global:RegisterAreaTriggerEvent]
+     */
+    int ClearAreaTriggerEvents(lua_State* L)
+    {
+        typedef EntryKey<Hooks::AreaTriggerEvents> Key;
+
+        if (lua_isnoneornil(L, 2))
+        {
+            uint32 entry = YLA::CHECKVAL<uint32>(L, 1);
+
+            YLA* E = YLA::GetYLA(L);
+            for (uint32 i = 1; i < Hooks::AREATRIGGER_EVENT_COUNT; ++i)
+                E->AreaTriggerEventBindings->Clear(Key((Hooks::AreaTriggerEvents)i, entry));
+        }
+        else
+        {
+            uint32 entry = YLA::CHECKVAL<uint32>(L, 1);
+            uint32 event_type = YLA::CHECKVAL<uint32>(L, 2);
+            YLA::GetYLA(L)->AreaTriggerEventBindings->Clear(Key((Hooks::AreaTriggerEvents)event_type, entry));
         }
         return 0;
     }

@@ -420,6 +420,7 @@ InstanceEventBindings(NULL),
 TicketEventBindings(NULL),
 SpellEventBindings(NULL),
 AuraEventBindings(NULL),
+AreaTriggerEventBindings(NULL),
 
 CreatureUniqueBindings(NULL)
 {
@@ -528,6 +529,7 @@ void YLA::CreateBindStores()
     InstanceEventBindings    = new BindingMap< EntryKey<Hooks::InstanceEvents> >(L);
     SpellEventBindings       = new BindingMap< EntryKey<Hooks::SpellEvents> >(L);
     AuraEventBindings        = new BindingMap< EntryKey<Hooks::AuraEvents> >(L);
+    AreaTriggerEventBindings = new BindingMap< EntryKey<Hooks::AreaTriggerEvents> >(L);
 
     CreatureUniqueBindings   = new BindingMap< UniqueObjectKey<Hooks::CreatureEvents> >(L);
 }
@@ -555,6 +557,7 @@ void YLA::DestroyBindStores()
     delete InstanceEventBindings;
     delete SpellEventBindings;
     delete AuraEventBindings;
+    delete AreaTriggerEventBindings;
     delete TicketEventBindings;
 
     delete CreatureUniqueBindings;
@@ -580,6 +583,7 @@ void YLA::DestroyBindStores()
     InstanceEventBindings = NULL;
     SpellEventBindings = NULL;
     AuraEventBindings = NULL;
+    AreaTriggerEventBindings = NULL;
     TicketEventBindings = NULL;
 
     CreatureUniqueBindings = NULL;
@@ -1803,6 +1807,16 @@ int YLA::Register(lua_State* L, uint8 regtype, uint32 entry, ObjectGuid guid, ui
                 auto key = EntryKey<Hooks::AuraEvents>((Hooks::AuraEvents)event_id, entry);
                 bindingID = AuraEventBindings->Insert(key, functionRef, shots);
                 createCancelCallback(L, bindingID, AuraEventBindings);
+                return 1; // Stack: callback
+            }
+            break;
+
+        case Hooks::REGTYPE_AREATRIGGER:
+            if (event_id < Hooks::AREATRIGGER_EVENT_COUNT)
+            {
+                auto key = EntryKey<Hooks::AreaTriggerEvents>((Hooks::AreaTriggerEvents)event_id, entry);
+                bindingID = AreaTriggerEventBindings->Insert(key, functionRef, shots);
+                createCancelCallback(L, bindingID, AreaTriggerEventBindings);
                 return 1; // Stack: callback
             }
             break;

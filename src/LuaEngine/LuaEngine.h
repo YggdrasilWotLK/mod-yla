@@ -352,6 +352,7 @@ public:
     BindingMap< EventKey<Hooks::TicketEvents> >*        TicketEventBindings;
     BindingMap< EntryKey<Hooks::SpellEvents> >*         SpellEventBindings;
     BindingMap< EntryKey<Hooks::AuraEvents> >*          AuraEventBindings;
+    BindingMap< EntryKey<Hooks::AreaTriggerEvents> >*   AreaTriggerEventBindings;
 
     BindingMap< UniqueObjectKey<Hooks::CreatureEvents> >*  CreatureUniqueBindings;
 
@@ -614,6 +615,9 @@ public:
 
     /* AreaTrigger */
     bool OnAreaTrigger(Player* pPlayer, AreaTriggerEntry const* pTrigger);
+
+    /* AreaTrigger per-entry */
+    void OnAreaTriggerEntry(Player* player, uint32 triggerId);
 
     /* Weather */
     void OnChange(Weather* weather, uint32 zone, WeatherState state, float grade);

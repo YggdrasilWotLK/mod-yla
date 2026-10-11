@@ -402,6 +402,12 @@ public:
             return true;
         return false;
     }
+
+    void OnAreaTriggerEntry(Player* player, AreaTrigger const* trigger) override
+    {
+        if (!player || !trigger) return;
+        YLA::GetMapStateOrGlobal(player->GetMapId(), player->GetInstanceId())->OnAreaTriggerEntry(player, trigger->entry);
+    }
 };
 
 class YLA_GameEventScript : public GameEventScript

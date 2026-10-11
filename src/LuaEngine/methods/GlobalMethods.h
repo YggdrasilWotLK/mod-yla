@@ -902,6 +902,32 @@ namespace LuaGlobalFunctions
     }
 
     /**
+     * Registers a [Unit] event handler.
+     *
+     * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
+     *
+     * In Compatibility mode, all events are registered to the WORLD state (-1).
+     *
+     * @table
+     * @columns [ID, Event, State, Parameters, Comment]
+     * @values [1, UNIT_EVENT_ON_DISPLAYID_CHANGE, "MAP", <event: number, unit: Unit, displayId: number>, ""]
+     * @values [2, UNIT_EVENT_ON_SHAPESHIFT_FORM, "MAP", <event: number, unit: Unit, form: number>, ""]
+     *
+     * @proto cancel = (event, function)
+     * @proto cancel = (event, function, shots)
+     *
+     * @param uint32 event : [Unit] event Id, refer to table above
+     * @param function function : function to register
+     * @param uint32 shots = 0 : the number of times the function will be called, 0 means "always call this function"
+     *
+     * @return function cancel : a function that cancels the binding when called
+     */
+    int RegisterUnitEvent(lua_State* L)
+    {
+        return RegisterEventHelper(L, Hooks::REGTYPE_UNIT);
+    }
+
+    /**
      * Registers a [BattleGround] event handler.
      *
      * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
@@ -3197,6 +3223,33 @@ namespace LuaGlobalFunctions
         {
             uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
             YLA::GetYLA(L)->VehicleEventBindings->Clear(Key((Hooks::VehicleEvents)event_type));
+        }
+        return 0;
+    }
+
+    /**
+     * Unbinds event handlers for either all [Unit] events, or one type of [Unit] event.
+     *
+     * If `event_type` is `nil`, all [Unit] event handlers are cleared.
+     *
+     * Otherwise, only event handlers for `event_type` are cleared.
+     *
+     * @proto ()
+     * @proto (event_type)
+     * @param uint32 event_type : the event whose handlers will be cleared, see [Global:RegisterUnitEvent]
+     */
+    int ClearUnitEvents(lua_State* L)
+    {
+        typedef EventKey<Hooks::UnitEvents> Key;
+
+        if (lua_isnoneornil(L, 1))
+        {
+            YLA::GetYLA(L)->UnitEventBindings->Clear();
+        }
+        else
+        {
+            uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
+            YLA::GetYLA(L)->UnitEventBindings->Clear(Key((Hooks::UnitEvents)event_type));
         }
         return 0;
     }

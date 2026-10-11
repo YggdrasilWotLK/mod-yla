@@ -90,6 +90,7 @@ namespace Hooks
         REGTYPE_SPELL,
         REGTYPE_ALL_CREATURE,
         REGTYPE_AURA,
+        REGTYPE_UNIT,
         REGTYPE_AREATRIGGER,
         REGTYPE_COUNT
     };
@@ -414,6 +415,14 @@ namespace Hooks
         ALL_CREATURE_EVENT_ON_SELECT_LEVEL              = 3, // (event, creature_template, creature)
         ALL_CREATURE_EVENT_ON_BEFORE_SELECT_LEVEL       = 4, // (event, creature_template, creature, level) - Can return the new level
         ALL_CREATURE_EVENT_COUNT
+    };
+
+    enum UnitEvents
+    {
+        UNIT_EVENT_ON_DISPLAYID_CHANGE                  = 1, // (event, unit, displayId)
+        UNIT_EVENT_ON_SHAPESHIFT_FORM                   = 2, // (event, unit, form)
+
+        UNIT_EVENT_COUNT
     };
 
     enum AreaTriggerEvents

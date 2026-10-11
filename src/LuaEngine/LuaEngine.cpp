@@ -405,6 +405,7 @@ GroupEventBindings(NULL),
 VehicleEventBindings(NULL),
 BGEventBindings(NULL),
 AllCreatureEventBindings(NULL),
+UnitEventBindings(NULL),
 
 PacketEventBindings(NULL),
 CreatureEventBindings(NULL),
@@ -511,6 +512,7 @@ void YLA::CreateBindStores()
     GuildEventBindings       = new BindingMap< EventKey<Hooks::GuildEvents> >(L);
     GroupEventBindings       = new BindingMap< EventKey<Hooks::GroupEvents> >(L);
     VehicleEventBindings     = new BindingMap< EventKey<Hooks::VehicleEvents> >(L);
+    UnitEventBindings        = new BindingMap< EventKey<Hooks::UnitEvents> >(L);
     BGEventBindings          = new BindingMap< EventKey<Hooks::BGEvents> >(L);
     TicketEventBindings      = new BindingMap< EventKey<Hooks::TicketEvents> >(L);
     AllCreatureEventBindings = new BindingMap< EventKey<Hooks::AllCreatureEvents> >(L);
@@ -539,6 +541,7 @@ void YLA::DestroyBindStores()
     delete GuildEventBindings;
     delete GroupEventBindings;
     delete VehicleEventBindings;
+    delete UnitEventBindings;
     delete AllCreatureEventBindings;
 
     delete PacketEventBindings;
@@ -564,6 +567,7 @@ void YLA::DestroyBindStores()
     GuildEventBindings = NULL;
     GroupEventBindings = NULL;
     VehicleEventBindings = NULL;
+    UnitEventBindings = NULL;
     AllCreatureEventBindings = NULL;
 
     PacketEventBindings = NULL;
@@ -1564,6 +1568,16 @@ int YLA::Register(lua_State* L, uint8 regtype, uint32 entry, ObjectGuid guid, ui
                 auto key = EventKey<Hooks::VehicleEvents>((Hooks::VehicleEvents)event_id);
                 bindingID = VehicleEventBindings->Insert(key, functionRef, shots);
                 createCancelCallback(L, bindingID, VehicleEventBindings);
+                return 1; // Stack: callback
+            }
+            break;
+
+        case Hooks::REGTYPE_UNIT:
+            if (event_id < Hooks::UNIT_EVENT_COUNT)
+            {
+                auto key = EventKey<Hooks::UnitEvents>((Hooks::UnitEvents)event_id);
+                bindingID = UnitEventBindings->Insert(key, functionRef, shots);
+                createCancelCallback(L, bindingID, UnitEventBindings);
                 return 1; // Stack: callback
             }
             break;

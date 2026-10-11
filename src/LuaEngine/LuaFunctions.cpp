@@ -11,6 +11,7 @@ extern "C"
 
 // YLA
 #include "LuaEngine.h"
+#include "ShadowPlayer.h"
 #include "YLAEventMgr.h"
 #include "YLAIncludes.h"
 #include "YLATemplate.h"
@@ -22,6 +23,7 @@ extern "C"
 #include "WorldObjectMethods.h"
 #include "UnitMethods.h"
 #include "PlayerMethods.h"
+#include "ShadowMethods.h"
 #include "CreatureMethods.h"
 #include "GroupMethods.h"
 #include "GuildMethods.h"
@@ -875,6 +877,38 @@ YLARegister<Player> PlayerMethods[] =
     { "SetViewpoint", &LuaPlayer::SetViewpoint },
     { "ToggleInstantFlight", &LuaPlayer::ToggleInstantFlight },
     { "SetCreationTime", &LuaPlayer::SetCreationTime },
+
+    { NULL, NULL }
+};
+
+// Master-side bot helpers (Player -> Shadow bridge)
+YLARegister<Player> PlayerShadowMethods[] =
+{
+    { "ToShadow", &LuaPlayerShadow::ToShadow },
+    { "GetBots", &LuaPlayerShadow::GetBots },
+    { "GetBotsCount", &LuaPlayerShadow::GetBotsCount },
+    { "BotCommand", &LuaPlayerShadow::BotCommand },
+    { "AddBot", &LuaPlayerShadow::AddBot },
+    { "RemoveBot", &LuaPlayerShadow::RemoveBot },
+
+    { NULL, NULL }
+};
+
+// Bot-side methods for the Shadow sub-class of Player
+YLARegister<ShadowPlayer> ShadowMethods[] =
+{
+    { "ToPlayer", &LuaShadow::ToPlayer },
+    { "GetMaster", &LuaShadow::GetMaster },
+    { "HasAI", &LuaShadow::HasAI },
+    { "IsRealPlayer", &LuaShadow::IsRealPlayer },
+    { "HasRealPlayerMaster", &LuaShadow::HasRealPlayerMaster },
+    { "HasActivePlayerMaster", &LuaShadow::HasActivePlayerMaster },
+    { "IsAlt", &LuaShadow::IsAlt },
+    { "GetState", &LuaShadow::GetState },
+    { "SendCommand", &LuaShadow::SendCommand },
+    { "HasStrategy", &LuaShadow::HasStrategy },
+    { "GetStrategies", &LuaShadow::GetStrategies },
+    { "DoAction", &LuaShadow::DoAction },
 
     { NULL, NULL }
 };
@@ -1958,6 +1992,18 @@ void RegisterFunctions(YLA* E)
     YLATemplate<Player>::SetMethods(E, WorldObjectMethods);
     YLATemplate<Player>::SetMethods(E, UnitMethods);
     YLATemplate<Player>::SetMethods(E, PlayerMethods);
+    YLATemplate<Player>::SetMethods(E, PlayerShadowMethods);
+
+    // Shadow: sub-class of Player for mod-shadows bots. Inherits the full
+    // Player chain plus bot-specific ShadowMethods. Bots are viewed as
+    // Shadows via Player:ToShadow() and converted back via Shadow:ToPlayer().
+    YLATemplate<ShadowPlayer>::Register(E, "Shadow");
+    YLATemplate<ShadowPlayer>::SetMethods(E, ObjectMethods);
+    YLATemplate<ShadowPlayer>::SetMethods(E, WorldObjectMethods);
+    YLATemplate<ShadowPlayer>::SetMethods(E, UnitMethods);
+    YLATemplate<ShadowPlayer>::SetMethods(E, PlayerMethods);
+    YLATemplate<ShadowPlayer>::SetMethods(E, PlayerShadowMethods);
+    YLATemplate<ShadowPlayer>::SetMethods(E, ShadowMethods);
 
     YLATemplate<Creature>::Register(E, "Creature");
     YLATemplate<Creature>::SetMethods(E, ObjectMethods);

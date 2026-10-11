@@ -178,3 +178,22 @@
     panel.scrollTop = activeMethod.offsetTop - panel.clientHeight / 2;
   }
 })();
+
+// ── INHERITED METHODS TOGGLE ─────────────────────────────────────────────────
+(function () {
+  const btn = document.getElementById('inh-toggle');
+  if (!btn) return;
+
+  function setHidden(hidden) {
+    document.body.classList.toggle('hide-inherited', hidden);
+    btn.setAttribute('aria-pressed', hidden);
+    btn.textContent = hidden ? 'Show inherited' : 'Hide inherited';
+    try { localStorage.setItem('yla-hide-inherited', hidden ? '1' : '0'); } catch (e) {}
+  }
+
+  btn.addEventListener('click', () => setHidden(!document.body.classList.contains('hide-inherited')));
+
+  let initial = false;
+  try { initial = localStorage.getItem('yla-hide-inherited') === '1'; } catch (e) {}
+  if (initial) setHidden(true);
+})();

@@ -9,12 +9,21 @@ require_once __DIR__ . '/../render.php';
 <section id="content">
   <?php if ($selectedMethod && isset($allMethods[$selectedMethod])): ?>
 
-    <?php $m = $allMethods[$selectedMethod]; ?>
-    <div class="breadcrumb">
+    <?php
+      $m = $allMethods[$selectedMethod];
+      $ownCount = count($classes[$selectedClass]['methods']);
+      $inhCount = count($allMethods) - $ownCount;
+    ?>
+    <div class="breadcrumb breadcrumb-title">
       <a href="?class=<?= urlencode($selectedClass) ?>"><?= htmlspecialchars($selectedClass) ?></a>
-      &rsaquo; <?= htmlspecialchars($selectedMethod) ?>
+      <span class="crumb-sep">&rsaquo;</span><span><?= htmlspecialchars($selectedMethod) ?></span>
+      <?php if ($inhCount > 0): ?>
+        <button id="inh-toggle" aria-pressed="false" title="Show only methods defined on <?= htmlspecialchars($selectedClass) ?>">Hide inherited</button>
+      <?php endif; ?>
     </div>
-    <?= render_method_card($selectedMethod, $m, false, $selectedClass, $classes) ?>
+    <div id="current-method">
+      <?= render_method_card($selectedMethod, $m, false, $selectedClass, $classes) ?>
+    </div>
 
   <?php elseif ($currentClass): ?>
 
@@ -37,6 +46,7 @@ require_once __DIR__ . '/../render.php';
       <div class="mcb-item"><span class="mcb-dot-own"></span> <?= $ownCount ?> own methods</div>
       <?php if ($inhCount > 0): ?>
         <div class="mcb-item"><span class="mcb-dot-inh"></span> <?= $inhCount ?> inherited</div>
+        <button id="inh-toggle" aria-pressed="false" title="Show only methods defined on <?= htmlspecialchars($selectedClass) ?>">Hide inherited</button>
       <?php endif; ?>
     </div>
 

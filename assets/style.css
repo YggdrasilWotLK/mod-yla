@@ -100,6 +100,8 @@ html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui,
 @media (min-width: 901px) {
   #app.sidebar-collapsed { grid-template-columns: 0 1fr; }
   #app.sidebar-collapsed #sidebar { display: none; }
+  /* Without this, #main auto-places into the 0-width first track and vanishes. */
+  #app.sidebar-collapsed #main { grid-column: 2; }
 }
 @media (max-width: 900px) {
   #sidebar-collapse, #sidebar-expand { display: none !important; }

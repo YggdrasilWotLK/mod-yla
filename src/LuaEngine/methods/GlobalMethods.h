@@ -1281,11 +1281,10 @@ namespace LuaGlobalFunctions
      *
      * @table
      * @columns [ID, Event, State, Parameters, Comment]
-     * @values [1, TICKET_EVENT_ON_CREATE, "WORLD", <event: number, player: Player, ticket: Ticket>, ""]
-     * @values [2, TICKET_EVENT_ON_UPDATE, "WORLD", <event: number, player: Player, ticket: Ticket, message: string>, ""]
-     * @values [3, TICKET_EVENT_ON_CLOSE, "WORLD", <event: number, player: Player, ticket: Ticket>, ""]
-     * @values [4, TICKET_EVENT_STATUS_UPDATE, "WORLD", <event: number, player: Player, ticket: Ticket>, ""]
-     * @values [5, TICKET_EVENT_ON_RESOLVE, "WORLD", <event: number, player: Player, ticket: Ticket>, ""]
+     * @values [1, TICKET_EVENT_ON_CREATE, "WORLD", <event: number, ticket: Ticket>, ""]
+     * @values [2, TICKET_EVENT_UPDATE_LAST_CHANGE, "WORLD", <event: number, ticket: Ticket>, ""]
+     * @values [3, TICKET_EVENT_ON_CLOSE, "WORLD", <event: number, ticket: Ticket>, ""]
+     * @values [4, TICKET_EVENT_ON_RESOLVE, "WORLD", <event: number, ticket: Ticket>, ""]
      *
      * @param uint32 event : event ID, refer to table above
      * @param function function : function to register

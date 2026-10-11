@@ -652,7 +652,8 @@ public:
         PLAYERHOOK_ON_BEFORE_UPDATE_SKILL,
         PLAYERHOOK_ON_UPDATE_SKILL,
         PLAYERHOOK_CAN_RESURRECT,
-        PLAYERHOOK_ON_PLAYER_RELEASED_GHOST
+        PLAYERHOOK_ON_PLAYER_RELEASED_GHOST,
+        PLAYERHOOK_ON_PLAYER_PVP_FLAG_CHANGE
     }) { }
 
     // MAP
@@ -1029,6 +1030,12 @@ public:
     void OnPlayerReleasedGhost(Player* player) override
     {
         YLA::GetMapStateOrGlobal(player->GetMapId(), player->GetInstanceId())->OnPlayerReleasedGhost(player);
+    }
+
+    // MAP
+    void OnPlayerPVPFlagChange(Player* player, bool state) override
+    {
+        YLA::GetMapStateOrGlobal(player->GetMapId(), player->GetInstanceId())->OnPlayerPvpFlagChange(player, state);
     }
 };
 

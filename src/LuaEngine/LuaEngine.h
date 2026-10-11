@@ -590,6 +590,7 @@ public:
     void OnLearnSpell(Player* player, uint32 spellId);
     void OnAchiComplete(Player* player, AchievementEntry const* achievement);
     void OnFfaPvpStateUpdate(Player* player, bool hasFfaPvp);
+    void OnPlayerPvpFlagChange(Player* player, bool state);
     bool OnCanInitTrade(Player* player, Player* target);
     bool OnCanSendMail(Player* player, ObjectGuid receiverGuid, ObjectGuid mailbox, std::string& subject, std::string& body, uint32 money, uint32 cod, Item* item);
     bool OnCanJoinLfg(Player* player, uint8 roles, lfg::LfgDungeonSet& dungeons, const std::string& comment);

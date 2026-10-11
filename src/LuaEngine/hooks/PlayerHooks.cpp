@@ -664,6 +664,15 @@ void YLA::OnFfaPvpStateUpdate(Player* player, bool hasFfaPvp)
 }
 
 // MAP
+void YLA::OnPlayerPvpFlagChange(Player* player, bool state)
+{
+    START_HOOK_MAP(PLAYER_EVENT_ON_PVP_FLAG_CHANGE);
+    Push(player);
+    Push(state);
+    CallAllFunctions(PlayerEventBindings, key);
+}
+
+// MAP
 bool YLA::OnCanInitTrade(Player* player, Player* target)
 {
     START_HOOK_MAP_WITH_RETVAL(PLAYER_EVENT_ON_CAN_INIT_TRADE, true);

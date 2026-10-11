@@ -387,6 +387,11 @@ void YLA::OnPlayerLeave(Map* map, Player* player)
 // MAP
 void YLA::OnUpdate(Map* map, uint32 diff)
 {
+    // Tick map-state timers here (map thread); map-created global timers otherwise never fire.
+    // Skipped for GYLA, already ticked by OnWorldUpdate.
+    if (this != GYLA && eventMgr)
+        eventMgr->globalProcessor->Update(diff);
+
     START_HOOK_MAP(MAP_EVENT_ON_UPDATE);
     Push(map);
     Push(diff);

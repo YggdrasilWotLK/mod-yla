@@ -873,6 +873,35 @@ namespace LuaGlobalFunctions
     }
 
     /**
+     * Registers a [Vehicle] event handler.
+     *
+     * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
+     *
+     * In Compatibility mode, all events are registered to the WORLD state (-1).
+     *
+     * @table
+     * @columns [ID, Event, State, Parameters, Comment]
+     * @values [1, VEHICLE_EVENT_ON_INSTALL, "MAP", <event: number, vehicle: Vehicle>, ""]
+     * @values [2, VEHICLE_EVENT_ON_UNINSTALL, "MAP", <event: number, vehicle: Vehicle>, ""]
+     * @values [4, VEHICLE_EVENT_ON_INSTALL_ACCESSORY, "MAP", <event: number, vehicle: Vehicle, accessory: Creature>, ""]
+     * @values [5, VEHICLE_EVENT_ON_ADD_PASSENGER, "MAP", <event: number, vehicle: Vehicle, passenger: Unit, seatId: number>, "Fires when a unit enters the vehicle"]
+     * @values [6, VEHICLE_EVENT_ON_REMOVE_PASSENGER, "MAP", <event: number, vehicle: Vehicle, passenger: Unit>, "Fires when a unit leaves the vehicle"]
+     *
+     * @proto cancel = (event, function)
+     * @proto cancel = (event, function, shots)
+     *
+     * @param uint32 event : [Vehicle] event Id, refer to table above
+     * @param function function : function to register
+     * @param uint32 shots = 0 : the number of times the function will be called, 0 means "always call this function"
+     *
+     * @return function cancel : a function that cancels the binding when called
+     */
+    int RegisterVehicleEvent(lua_State* L)
+    {
+        return RegisterEventHelper(L, Hooks::REGTYPE_VEHICLE);
+    }
+
+    /**
      * Registers a [BattleGround] event handler.
      *
      * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
@@ -3079,6 +3108,33 @@ namespace LuaGlobalFunctions
         {
             uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
             YLA::GetYLA(L)->GroupEventBindings->Clear(Key((Hooks::GroupEvents)event_type));
+        }
+        return 0;
+    }
+
+    /**
+     * Unbinds event handlers for either all [Vehicle] events, or one type of [Vehicle] event.
+     *
+     * If `event_type` is `nil`, all [Vehicle] event handlers are cleared.
+     *
+     * Otherwise, only event handlers for `event_type` are cleared.
+     *
+     * @proto ()
+     * @proto (event_type)
+     * @param uint32 event_type : the event whose handlers will be cleared, see [Global:RegisterVehicleEvent]
+     */
+    int ClearVehicleEvents(lua_State* L)
+    {
+        typedef EventKey<Hooks::VehicleEvents> Key;
+
+        if (lua_isnoneornil(L, 1))
+        {
+            YLA::GetYLA(L)->VehicleEventBindings->Clear();
+        }
+        else
+        {
+            uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
+            YLA::GetYLA(L)->VehicleEventBindings->Clear(Key((Hooks::VehicleEvents)event_type));
         }
         return 0;
     }

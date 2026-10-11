@@ -391,7 +391,7 @@ namespace Hooks
     enum TicketEvents
     {
         TICKET_EVENT_ON_CREATE                          = 1,    // (event, ticket)
-        TICKET_EVENT_UPDATE_LAST_CHANGE                 = 2,    // (event, ticket, message)
+        TICKET_EVENT_UPDATE_LAST_CHANGE                 = 2,    // (event, ticket)
         TICKET_EVENT_ON_CLOSE                           = 3,    // (event, ticket)
         TICKET_EVENT_ON_RESOLVE                         = 4,    // (event, ticket)
         TICKET_EVENT_COUNT

@@ -10,6 +10,9 @@
 /***
  * Represents a support ticket created by a [Player] using the in-game ticket system.
  *
+ * Note: ticket events pass only the [Ticket] object (no [Player] argument).
+ * Use `ticket:GetPlayerName()` or `ticket:GetPlayer()` to identify the ticket author.
+ *
  * Inherits all methods from: none
  */
 namespace LuaTicket

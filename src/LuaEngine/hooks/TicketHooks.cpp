@@ -46,6 +46,13 @@ void YLA::OnTicketClose(GmTicket* ticket)
     CallAllFunctions(TicketEventBindings, key);
 }
 
+void YLA::OnTicketStatusUpdate(GmTicket* ticket)
+{
+    START_HOOK(TICKET_EVENT_ON_STATUS_UPDATE);
+    Push(ticket);
+    CallAllFunctions(TicketEventBindings, key);
+}
+
 void YLA::OnTicketResolve(GmTicket* ticket)
 {
     START_HOOK(TICKET_EVENT_ON_RESOLVE);

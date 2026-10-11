@@ -395,6 +395,7 @@ namespace Hooks
         TICKET_EVENT_UPDATE_LAST_CHANGE                 = 2,    // (event, ticket)
         TICKET_EVENT_ON_CLOSE                           = 3,    // (event, ticket)
         TICKET_EVENT_ON_RESOLVE                         = 4,    // (event, ticket)
+        TICKET_EVENT_ON_STATUS_UPDATE                   = 5,    // (event, ticket)
         TICKET_EVENT_COUNT
     };
 

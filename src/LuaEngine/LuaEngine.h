@@ -687,6 +687,7 @@ public:
     void OnTicketCreate(GmTicket* ticket);
     void OnTicketClose(GmTicket* ticket);
     void OnTicketUpdateLastChange(GmTicket* ticket);
+    void OnTicketStatusUpdate(GmTicket* ticket);
     void OnTicketResolve(GmTicket* ticket);
 
     /* Spell */

@@ -1272,6 +1272,7 @@ public:
         TICKETHOOK_ON_TICKET_CREATE,
         TICKETHOOK_ON_TICKET_UPDATE_LAST_CHANGE,
         TICKETHOOK_ON_TICKET_CLOSE,
+        TICKETHOOK_ON_TICKET_STATUS_UPDATE,
         TICKETHOOK_ON_TICKET_RESOLVE
     }) { }
 
@@ -1288,6 +1289,11 @@ public:
     void OnTicketClose(GmTicket* ticket) override
     {
         gYLA->OnTicketClose(ticket);
+    }
+
+    void OnTicketStatusUpdate(GmTicket* ticket) override
+    {
+        gYLA->OnTicketStatusUpdate(ticket);
     }
 
     void OnTicketResolve(GmTicket* ticket) override

@@ -1434,6 +1434,22 @@ namespace LuaPlayer
     }
 
     /**
+     * Returns the [Player]s currently selected unit GUID, including cross-map player targets
+     *
+     * Unlike [Player:GetSelection], which only resolves units on the same map via the
+     * caller's map, this returns the raw target [ObjectGuid] stored in UNIT_FIELD_TARGET.
+     * The guid can be resolved across maps for players with [Global:GetPlayerByGUID],
+     * making it suitable for world-state packet handlers such as CMSG_SET_SELECTION.
+     *
+     * @return [ObjectGuid] selectionGuid
+     */
+    int GetSelectionGUID(lua_State* L, Player* player)
+    {
+        YLA::Push(L, player->GetTarget());
+        return 1;
+    }
+
+    /**
      * Returns the [Player]s GM Rank
      *
      * @return [AccountTypes] gmRank

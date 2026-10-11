@@ -791,6 +791,7 @@ namespace LuaGlobalFunctions
      * @values [64, PLAYER_EVENT_ON_AURA_APPLY, "MAP", <event: number, player: Player, aura: Aura>, ""]
      * @values [65, PLAYER_EVENT_ON_HEAL, "MAP", <event: number, player: Player, target: Unit, heal: number>, "Can return new heal amount"]
      * @values [66, PLAYER_EVENT_ON_DAMAGE, "MAP", <event: number, player: Player, target: Unit, damage: number>, "Can return new damage amount"]
+     * @values [73, PLAYER_EVENT_ON_RELEASED_GHOST, "MAP", <event: number, player: Player>, ""]
      *
      * @proto cancel = (event, function)
      * @proto cancel = (event, function, shots)
@@ -1518,8 +1519,12 @@ namespace LuaGlobalFunctions
         const char* query = YLA::CHECKVAL<const char*>(L, 1);
 
         int numArgs = lua_gettop(L);
+        std::string formattedQuery;
         if (numArgs > 1)
-            query = YLA::FormatQuery(L, query).c_str();
+        {
+            formattedQuery = YLA::FormatQuery(L, query, WorldDatabase);
+            query = formattedQuery.c_str();
+        }
 
         YLAQuery result = WorldDatabase.Query(query);
         if (result)
@@ -1571,8 +1576,12 @@ namespace LuaGlobalFunctions
         const char* query = YLA::CHECKVAL<const char*>(L, 1);
 
         int numArgs = lua_gettop(L);
+        std::string formattedQuery;
         if (numArgs > 1)
-            query = YLA::FormatQuery(L, query).c_str();
+        {
+            formattedQuery = YLA::FormatQuery(L, query, WorldDatabase);
+            query = formattedQuery.c_str();
+        }
 
         WorldDatabase.Execute(query);
         return 0;
@@ -1595,8 +1604,12 @@ namespace LuaGlobalFunctions
         const char* query = YLA::CHECKVAL<const char*>(L, 1);
 
         int numArgs = lua_gettop(L);
+        std::string formattedQuery;
         if (numArgs > 1)
-            query = YLA::FormatQuery(L, query).c_str();
+        {
+            formattedQuery = YLA::FormatQuery(L, query, CharacterDatabase);
+            query = formattedQuery.c_str();
+        }
 
         QueryResult result = CharacterDatabase.Query(query);
         if (result)
@@ -1641,8 +1654,12 @@ namespace LuaGlobalFunctions
         const char* query = YLA::CHECKVAL<const char*>(L, 1);
 
         int numArgs = lua_gettop(L);
+        std::string formattedQuery;
         if (numArgs > 1)
-            query = YLA::FormatQuery(L, query).c_str();
+        {
+            formattedQuery = YLA::FormatQuery(L, query, CharacterDatabase);
+            query = formattedQuery.c_str();
+        }
 
         CharacterDatabase.Execute(query);
         return 0;
@@ -1665,8 +1682,12 @@ namespace LuaGlobalFunctions
         const char* query = YLA::CHECKVAL<const char*>(L, 1);
 
         int numArgs = lua_gettop(L);
+        std::string formattedQuery;
         if (numArgs > 1)
-            query = YLA::FormatQuery(L, query).c_str();
+        {
+            formattedQuery = YLA::FormatQuery(L, query, LoginDatabase);
+            query = formattedQuery.c_str();
+        }
 
         QueryResult result = LoginDatabase.Query(query);
         if (result)
@@ -1711,8 +1732,12 @@ namespace LuaGlobalFunctions
         const char* query = YLA::CHECKVAL<const char*>(L, 1);
 
         int numArgs = lua_gettop(L);
+        std::string formattedQuery;
         if (numArgs > 1)
-            query = YLA::FormatQuery(L, query).c_str();
+        {
+            formattedQuery = YLA::FormatQuery(L, query, LoginDatabase);
+            query = formattedQuery.c_str();
+        }
             
         LoginDatabase.Execute(query);
         return 0;

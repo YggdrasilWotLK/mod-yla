@@ -845,6 +845,14 @@ bool YLA::CanPlayerResurrect(Player* player)
 }
 
 // MAP
+void YLA::OnPlayerReleasedGhost(Player* player)
+{
+    START_HOOK_MAP(PLAYER_EVENT_ON_RELEASED_GHOST);
+    Push(player);
+    CallAllFunctions(PlayerEventBindings, key);
+}
+
+// MAP
 void YLA::OnPlayerQuestAccept(Player* player, Quest const* quest)
 {
     START_HOOK_MAP(PLAYER_EVENT_ON_QUEST_ACCEPT);

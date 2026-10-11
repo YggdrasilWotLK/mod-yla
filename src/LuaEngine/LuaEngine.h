@@ -43,6 +43,7 @@ extern "C"
 struct ItemTemplate;
 typedef BattlegroundTypeId BattleGroundTypeId;
 typedef AreaTrigger AreaTriggerEntry;
+template<class T> class DatabaseWorkerPool;
 class AuctionHouseObject;
 struct AuctionEntry;
 class Battleground;
@@ -422,7 +423,13 @@ public:
         YLATemplate<T>::Push(luastate, ptr);
     }
 
-    static std::string FormatQuery(lua_State* L, const char* query);
+    /*
+     * Replaces the `?` placeholders in `query` with the Lua arguments at
+     * stack index 2..top. String arguments are escaped through `db`, so the
+     * pool the query will run on must be passed.
+     */
+    template<typename T>
+    static std::string FormatQuery(lua_State* L, char const* query, DatabaseWorkerPool<T>& db);
 
     bool ExecuteCall(int params, int res);
 
@@ -592,6 +599,7 @@ public:
     void OnPlayerBeforeUpdateSkill(Player* player, uint32 skill_id, uint32& value, uint32 max, uint32 step);
     void OnPlayerUpdateSkill(Player* player, uint32 skill_id, uint32 value, uint32 max, uint32 step, uint32 new_value);
     bool CanPlayerResurrect(Player* player);
+    void OnPlayerReleasedGhost(Player* player);
     void OnPlayerQuestAccept(Player* player, Quest const* quest);
     void OnPlayerAuraApply(Player* player, Aura* aura);
     void OnPlayerHeal(Player* player, Unit* target, uint32& gain);

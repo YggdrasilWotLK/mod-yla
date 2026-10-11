@@ -909,8 +909,6 @@ YLARegister<ShadowPlayer> ShadowMethods[] =
     { "HasStrategy", &LuaShadow::HasStrategy },
     { "GetStrategies", &LuaShadow::GetStrategies },
     { "DoAction", &LuaShadow::DoAction },
-    { "BotSay", &LuaShadow::BotSay },
-    { "BotYell", &LuaShadow::BotYell },
 
     { NULL, NULL }
 };

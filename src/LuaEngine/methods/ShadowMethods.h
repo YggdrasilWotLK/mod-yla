@@ -360,68 +360,6 @@ namespace LuaShadow
         return 1;
 #endif
     }
-
-    /**
-     * Makes the [Shadow] bot say a message via its AI.
-     * Named BotSay (not Say) so the inherited [Player]:Say(text, lang) keeps
-     * working unchanged on [Shadow] objects.
-     *
-     * @param string text
-     * @return bool sent
-     */
-    inline int BotSay(lua_State* L, ShadowPlayer* shadow)
-    {
-#ifdef MOD_SHADOWS
-        std::string text = YLA::CHECKVAL<std::string>(L, 2);
-        if (!shadow || !ShadowPlayer::IsLive(shadow))
-        {
-            YLA::Push(L, false);
-            return 1;
-        }
-        if (auto ai = sShadowsMgr->GetShadowAI(ShadowPlayer::ToPlayer(shadow)))
-        {
-            YLA::Push(L, ai->Say(text));
-            return 1;
-        }
-        YLA::Push(L, false);
-        return 1;
-#else
-        (void)shadow;
-        YLA::Push(L, false);
-        return 1;
-#endif
-    }
-
-    /**
-     * Makes the [Shadow] bot yell a message via its AI.
-     * Named BotYell (not Yell) so the inherited [Player]:Yell(text, lang) keeps
-     * working unchanged on [Shadow] objects.
-     *
-     * @param string text
-     * @return bool sent
-     */
-    inline int BotYell(lua_State* L, ShadowPlayer* shadow)
-    {
-#ifdef MOD_SHADOWS
-        std::string text = YLA::CHECKVAL<std::string>(L, 2);
-        if (!shadow || !ShadowPlayer::IsLive(shadow))
-        {
-            YLA::Push(L, false);
-            return 1;
-        }
-        if (auto ai = sShadowsMgr->GetShadowAI(ShadowPlayer::ToPlayer(shadow)))
-        {
-            YLA::Push(L, ai->Yell(text));
-            return 1;
-        }
-        YLA::Push(L, false);
-        return 1;
-#else
-        (void)shadow;
-        YLA::Push(L, false);
-        return 1;
-#endif
-    }
 }
 
 /***

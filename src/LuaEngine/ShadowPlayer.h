@@ -67,7 +67,6 @@ private:
     ShadowPlayer() = delete;
     ShadowPlayer(ShadowPlayer const&) = delete;
     ShadowPlayer& operator=(ShadowPlayer const&) = delete;
-    ~ShadowPlayer() = delete;
 };
 
 #endif // _SHADOW_PLAYER_H

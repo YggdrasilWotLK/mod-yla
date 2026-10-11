@@ -1,22 +1,37 @@
 <?php
+function namespace_to_class(string $namespace): string {
+    if ($namespace === 'LuaGlobalFunctions') return 'GlobalMethods';
+    // Master-side bot helpers live in ShadowMethods.h under LuaPlayerShadow
+    // but are registered onto Player at runtime.
+    if ($namespace === 'LuaPlayerShadow') return 'Player';
+    return preg_replace('/^Lua/', '', $namespace);
+}
+
 function parse_headers(string $dir): array {
     $classes = [];
 
     foreach (glob($dir . '/*.h') as $file) {
         $content = file_get_contents($file);
 
-        if (!preg_match('/namespace\s+(Lua\w+)\s*\{/', $content, $nsMatch))
+        if (!preg_match_all('/namespace\s+(Lua\w+)\s*\{/', $content, $nsAll, PREG_OFFSET_CAPTURE))
             continue;
 
-        $namespace = $nsMatch[1];
-        $className = preg_replace('/^Lua/', '', $namespace);
-        $className = $className === 'GlobalFunctions' ? 'GlobalMethods' : $className;
+        // One header may hold several Lua namespaces (e.g. ShadowMethods.h
+        // holds LuaShadow + LuaPlayerShadow). Parse each block separately so
+        // bridge methods are attributed to the right class.
+        $nsCount = count($nsAll[1]);
+        for ($ni = 0; $ni < $nsCount; $ni++) {
+        $namespace = $nsAll[1][$ni][0];
+        $nsPos = $nsAll[0][$ni][1];
+        $className = namespace_to_class($namespace);
 
         $classDesc = '';
         $inherits  = [];
 
-        $nsPos  = strpos($content, 'namespace ' . $namespace);
-        $before = substr($content, 0, $nsPos);
+        // Class doc = last /** */ block before this namespace, but after the
+        // previous namespace block (so the 2nd namespace doesn't reuse the 1st's doc).
+        $prevEnd = $ni > 0 ? ($nsAll[0][$ni - 1][1] + strlen($nsAll[0][$ni - 1][0])) : 0;
+        $before = substr($content, $prevEnd, $nsPos - $prevEnd);
 
         if (preg_match_all('/\/\*\*\s*(.*?)\s*\*\//s', $before, $classDocMatches)) {
             $raw     = end($classDocMatches[1]);
@@ -38,12 +53,15 @@ function parse_headers(string $dir): array {
             }
         }
 
-        $nsStart = strpos($content, '{', strpos($content, 'namespace ' . $namespace));
+        $nsStart = strpos($content, '{', $nsPos);
         if ($nsStart === false) continue;
-        $body = substr($content, $nsStart + 1);
+        // End of this namespace block = start of the next namespace (or EOF).
+        // Method bodies never contain a "namespace Lua..." header, so this cut is safe.
+        $nsEnd = ($ni + 1 < $nsCount) ? $nsAll[0][$ni + 1][1] : strlen($content);
+        $body = substr($content, $nsStart + 1, $nsEnd - $nsStart - 1);
 
         $methods = [];
-        $pattern = '/\/\*\*\s*(.*?)\s*\*\/\s*int\s+(\w+)\s*\((?:lua_State\*|Eluna\*)/s';
+        $pattern = '/\/\*\*\s*(.*?)\s*\*\/\s*(?:inline\s+|static\s+)*int\s+(\w+)\s*\((?:lua_State\*|Eluna\*)/s';
         preg_match_all($pattern, $body, $methodMatches, PREG_SET_ORDER);
 
         foreach ($methodMatches as $m) {
@@ -172,13 +190,26 @@ function parse_headers(string $dir): array {
             ];
         }
 
-        $classes[$className] = [
-            'name'     => $className,
-            'desc'     => $classDesc,
-            'inherits' => $inherits,
-            'methods'  => $methods,
-            'file'     => basename($file),
-        ];
+        if (empty($methods))
+            continue;
+        if (!isset($classes[$className])) {
+            $classes[$className] = [
+                'name'     => $className,
+                'desc'     => $classDesc,
+                'inherits' => $inherits,
+                'methods'  => $methods,
+                'file'     => basename($file),
+            ];
+        } else {
+            // Merge: a class may be extended from several headers/namespaces
+            // (e.g. Player gains LuaPlayerShadow bridge methods from ShadowMethods.h).
+            $classes[$className]['methods'] = array_merge($classes[$className]['methods'], $methods);
+            if ($classes[$className]['desc'] === '' && $classDesc !== '')
+                $classes[$className]['desc'] = $classDesc;
+            if (empty($classes[$className]['inherits']) && !empty($inherits))
+                $classes[$className]['inherits'] = $inherits;
+        }
+        } // end namespace loop
     }
     
     $classes = array_filter($classes, fn($c) => !empty($c['methods']));

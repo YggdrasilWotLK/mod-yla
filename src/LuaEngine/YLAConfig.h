@@ -4,7 +4,7 @@
 #include "ConfigValueCache.h"
 #include <unordered_set>
 
-enum class ALEConfigValues : uint32
+enum class YLAConfigValues : uint32
 {
     // Boolean
     ENABLED = 0,
@@ -25,27 +25,27 @@ enum class ALEConfigValues : uint32
     CONFIG_VALUE_COUNT
 };
 
-class YLAConfig final : public ConfigValueCache<ALEConfigValues>
+class YLAConfig final : public ConfigValueCache<YLAConfigValues>
 {
     public:
         static YLAConfig& GetInstance();
 
         void Initialize(bool reload = false);
 
-        bool IsALEEnabled() const { return GetConfigValue<bool>(ALEConfigValues::ENABLED); }
-        bool IsTraceBackEnabled() const { return GetConfigValue<bool>(ALEConfigValues::TRACEBACK_ENABLED); }
-        bool IsAutoReloadEnabled() const { return GetConfigValue<bool>(ALEConfigValues::AUTORELOAD_ENABLED); }
-        bool IsByteCodeCacheEnabled() const { return GetConfigValue<bool>(ALEConfigValues::BYTECODE_CACHE_ENABLED); }
-        bool IsCompatibilityModeEnabled() const { return GetConfigValue<bool>(ALEConfigValues::COMPATIBILITY_MODE); }
+        bool IsYLAEnabled() const { return GetConfigValue<bool>(YLAConfigValues::ENABLED); }
+        bool IsTraceBackEnabled() const { return GetConfigValue<bool>(YLAConfigValues::TRACEBACK_ENABLED); }
+        bool IsAutoReloadEnabled() const { return GetConfigValue<bool>(YLAConfigValues::AUTORELOAD_ENABLED); }
+        bool IsByteCodeCacheEnabled() const { return GetConfigValue<bool>(YLAConfigValues::BYTECODE_CACHE_ENABLED); }
+        bool IsCompatibilityModeEnabled() const { return GetConfigValue<bool>(YLAConfigValues::COMPATIBILITY_MODE); }
 
-        std::string_view GetScriptPath() const { return GetConfigValue(ALEConfigValues::SCRIPT_PATH); }
-        std::string_view GetRequirePath() const { return GetConfigValue(ALEConfigValues::REQUIRE_PATH); }
-        std::string_view GetRequireCPath() const { return GetConfigValue(ALEConfigValues::REQUIRE_CPATH); }
+        std::string_view GetScriptPath() const { return GetConfigValue(YLAConfigValues::SCRIPT_PATH); }
+        std::string_view GetRequirePath() const { return GetConfigValue(YLAConfigValues::REQUIRE_PATH); }
+        std::string_view GetRequireCPath() const { return GetConfigValue(YLAConfigValues::REQUIRE_CPATH); }
 
-        uint32 GetAutoReloadInterval() const { return GetConfigValue<uint32>(ALEConfigValues::AUTORELOAD_INTERVAL); }
+        uint32 GetAutoReloadInterval() const { return GetConfigValue<uint32>(YLAConfigValues::AUTORELOAD_INTERVAL); }
 
-        bool ShouldMapLoadALE(uint32 mapId) const;
-        bool ShouldMapLoadALEByFolderName(const std::string& folderName, uint32 mapId) const;
+        bool ShouldMapLoadYLA(uint32 mapId) const;
+        bool ShouldMapLoadYLAByFolderName(const std::string& folderName, uint32 mapId) const;
 
     protected:
         void BuildConfigCache() override;

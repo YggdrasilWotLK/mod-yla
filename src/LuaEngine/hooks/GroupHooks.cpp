@@ -13,7 +13,7 @@
 using namespace Hooks;
 
 #define START_HOOK(EVENT)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA;\
     /* WORLD dispatch runs Lua on this state: hold its lock too. */\

@@ -366,7 +366,7 @@ public:
 
     // GUID-checked at Push time; destroyed/relogged players are Lua errors.
     // Not-in-world players pass through (normal during login hooks).
-    static Player* YlaResolvePlayer(lua_State* L, int narg, YLAObject* ALEObj, Player* raw, bool error)
+    static Player* YlaResolvePlayer(lua_State* L, int narg, YLAObject* YLAObj, Player* raw, bool error)
     {
         auto fail = [&](const char* reason) -> Player*
         {
@@ -385,7 +385,7 @@ public:
 
         if (!raw)
             return fail("null player reference");
-        ObjectGuid guid = ALEObj->GetPlayerGuid();
+        ObjectGuid guid = YLAObj->GetPlayerGuid();
         if (guid.IsEmpty())
             return fail("pointer to destroyed (logged out) object");
         Player* live = ObjectAccessor::FindPlayer(guid);
@@ -413,11 +413,11 @@ public:
 
     static T* Check(lua_State* L, int narg, bool error = true)
     {
-        YLAObject* ALEObj = YLA::CHECKTYPE(L, narg, tname, error);
-        if (!ALEObj)
+        YLAObject* YLAObj = YLA::CHECKTYPE(L, narg, tname, error);
+        if (!YLAObj)
             return NULL;
 
-        if (!ALEObj->IsValid(YlaSnapId(L)))
+        if (!YLAObj->IsValid(YlaSnapId(L)))
         {
             char buff[256];
             snprintf(buff, 256, "%s expected, got pointer to nonexisting (invalidated) object (%s). Check your code.", tname, luaL_typename(L, narg));
@@ -431,8 +431,8 @@ public:
             }
             return NULL;
         }
-        T* raw = static_cast<T*>(ALEObj->GetObj());
-        return YlaResolvePlayer(L, narg, ALEObj, raw, error);
+        T* raw = static_cast<T*>(YLAObj->GetObj());
+        return YlaResolvePlayer(L, narg, YLAObj, raw, error);
     }
 
     static int GetType(lua_State* L)
@@ -443,10 +443,10 @@ public:
 
     static int SetInvalidation(lua_State* L)
     {
-        YLAObject* ALEObj = YLA::CHECKOBJ<YLAObject>(L, 1);
+        YLAObject* YLAObj = YLA::CHECKOBJ<YLAObject>(L, 1);
         bool invalidate = YLA::CHECKVAL<bool>(L, 2);
 
-        ALEObj->SetValidation(invalidate);
+        YLAObj->SetValidation(invalidate);
         return 0;
     }
 

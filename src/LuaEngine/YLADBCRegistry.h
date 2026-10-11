@@ -1,5 +1,5 @@
-#ifndef ALEDBCREGISTRY_H
-#define ALEDBCREGISTRY_H
+#ifndef YLADBCREGISTRY_H
+#define YLADBCREGISTRY_H
 
 #include <string>
 #include <vector>
@@ -34,5 +34,5 @@ extern std::vector<DBCDefinition> dbcRegistry;
         }                                       \
     }
 
-#endif // ALEDBCREGISTRY_H
+#endif // YLADBCREGISTRY_H
 

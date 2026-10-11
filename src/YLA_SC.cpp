@@ -1333,7 +1333,7 @@ public:
     }
 };
 
-void AddSC_ALE()
+void AddSC_YLA()
 {
     new YLA_AllCreatureScript();
     new YLA_AllGameObjectScript();

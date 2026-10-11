@@ -16,7 +16,7 @@
 using namespace Hooks;
 
 #define START_HOOK_WORLD(EVENT)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA;\
     /* WORLD dispatch runs Lua on this state: hold its lock too. */\
@@ -28,7 +28,7 @@ using namespace Hooks;
         return;
 
 #define START_HOOK_WORLD_WITH_RETVAL(EVENT, RETVAL)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return RETVAL;\
     LOCK_YLA;\
     /* WORLD dispatch runs Lua on this state: hold its lock too. */\
@@ -40,7 +40,7 @@ using namespace Hooks;
         return RETVAL;
 
 #define START_HOOK_MAP(EVENT)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\
@@ -50,7 +50,7 @@ using namespace Hooks;
         return;
 
 #define START_HOOK_MAP_WITH_RETVAL(EVENT, RETVAL)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return RETVAL;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\
@@ -293,7 +293,7 @@ void YLA::OnWorldUpdate(uint32 diff)
     {
         LOCK_YLA;
         if (ShouldReload())
-            _ReloadALE();
+            _ReloadYLA();
     }
 
     // Deferred far teleports/logouts (maps idle here). Deliberately without

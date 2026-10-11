@@ -16,12 +16,12 @@
  */
 
 // From SC
-void AddSC_ALE();
+void AddSC_YLA();
 
 // Add all
 void Addmod_ylaScripts()
 {
-    AddSC_ALE();
+    AddSC_YLA();
 }
 
 // Compat: folder still checked out as modules/mod-ale until repo rename

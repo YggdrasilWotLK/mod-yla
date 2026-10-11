@@ -111,7 +111,7 @@ struct LuaScript
 
 #include "YLAEventMgr.h"
 
-inline uint64 ALEMapStateKey(uint32 mapId, uint32 instanceId) { return (static_cast<uint64>(mapId) << 32) | instanceId; }
+inline uint64 YLAMapStateKey(uint32 mapId, uint32 instanceId) { return (static_cast<uint64>(mapId) << 32) | instanceId; }
 
 #define YLA_GAME_API AC_GAME_API
 
@@ -125,7 +125,7 @@ public:
         if (pendingCallbacks == 0 && reloadScheduled)
         {
             LOCK_YLA;
-            _ReloadALE();
+            _ReloadYLA();
         }
     }
     bool CanReload() const { return pendingCallbacks == 0; }
@@ -183,7 +183,7 @@ public:
     static std::unordered_map<std::string, std::string> worldDataCache;
     static std::shared_mutex worldDataMutex;
 
-    // Per-instance map boxes (ALEMapStateKey): owning map state writes, everyone reads last-value; box dies with its instance.
+    // Per-instance map boxes (YLAMapStateKey): owning map state writes, everyone reads last-value; box dies with its instance.
     static std::unordered_map<uint64, std::unordered_map<std::string, std::string>> mapBoxCache;
     static std::shared_mutex mapBoxMutex;
 
@@ -202,7 +202,7 @@ public:
     static void ClearMapBox(uint32 mapId, uint32 instanceId)
     {
         std::lock_guard lock(mapBoxMutex);
-        mapBoxCache.erase(ALEMapStateKey(mapId, instanceId));
+        mapBoxCache.erase(YLAMapStateKey(mapId, instanceId));
     }
 
     static std::string SerializeValue(lua_State* L, int idx);
@@ -242,7 +242,7 @@ private:
     static std::map<uint64, std::shared_ptr<YLA>> g_states;
     static std::shared_mutex g_states_mutex;
     // Shared ownership of the global state (GYLA mirrors it raw).
-    static std::shared_ptr<YLA> GALE_HOLDER;
+    static std::shared_ptr<YLA> GYLA_HOLDER;
 
     uint64 callstackid = 2;
     uint32 event_level;
@@ -265,7 +265,7 @@ private:
     void CreateBindStores();
     void InvalidateObjects();
 
-    static void _ReloadALE();
+    static void _ReloadYLA();
     static void LoadScriptPaths();
     static void GetScripts(std::string path, uint32 mapId = 0);
     static void AddScriptPath(std::string filename, const std::string& fullpath);
@@ -359,7 +359,7 @@ public:
     // Lock-free set; the flag is consumed under LOCK_YLA in OnWorldUpdate.
     // Must not take locks: callable from Lua callbacks holding state locks
     // (lock order everywhere else is global -> state, never the reverse).
-    static void ReloadALE() { reload = true; }
+    static void ReloadYLA() { reload = true; }
     static LockType& GetLock() { return lock; }
     static bool IsInitialized() { return initialized; }
 
@@ -368,17 +368,17 @@ public:
     static std::shared_ptr<YLA> GetMapState(uint32 mapId, uint32 instanceId = 0)
     {
         std::shared_lock lock(g_states_mutex);
-        auto it = g_states.find(ALEMapStateKey(mapId, instanceId));
+        auto it = g_states.find(YLAMapStateKey(mapId, instanceId));
         return it != g_states.end() ? it->second : nullptr;
     }
 
     static std::shared_ptr<YLA> GetMapStateOrGlobal(uint32 mapId, uint32 instanceId = 0)
     {
         std::shared_lock lock(g_states_mutex);
-        auto it = g_states.find(ALEMapStateKey(mapId, instanceId));
+        auto it = g_states.find(YLAMapStateKey(mapId, instanceId));
         if (it != g_states.end() && it->second)
             return it->second;
-        return GALE_HOLDER;
+        return GYLA_HOLDER;
     }
 
     static std::shared_ptr<YLA> CreateMapState(uint32 mapId, uint32 instanceId = 0);

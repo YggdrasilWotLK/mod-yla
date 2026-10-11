@@ -15,7 +15,7 @@
 using namespace Hooks;
 
 #define START_HOOK(EVENT, AI)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\
@@ -28,7 +28,7 @@ using namespace Hooks;
     Push(AI->instance)
 
 #define START_HOOK_WITH_RETVAL(EVENT, AI, RETVAL)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return RETVAL;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\

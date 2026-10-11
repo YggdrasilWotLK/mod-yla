@@ -17,7 +17,7 @@
 #include "Database/QueryResult.h"
 #include "Log.h"
 
-typedef QueryResult ALEQuery;
+typedef QueryResult YLAQuery;
 #define GET_GUID                GetGUID
 #define HIGHGUID_PLAYER         HighGuid::Player
 #define HIGHGUID_UNIT           HighGuid::Unit

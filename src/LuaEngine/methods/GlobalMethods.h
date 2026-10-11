@@ -791,6 +791,7 @@ namespace LuaGlobalFunctions
      * @values [64, PLAYER_EVENT_ON_AURA_APPLY, "MAP", <event: number, player: Player, aura: Aura>, ""]
      * @values [65, PLAYER_EVENT_ON_HEAL, "MAP", <event: number, player: Player, target: Unit, heal: number>, "Can return new heal amount"]
      * @values [66, PLAYER_EVENT_ON_DAMAGE, "MAP", <event: number, player: Player, target: Unit, damage: number>, "Can return new damage amount"]
+     * @values [67, PLAYER_EVENT_ON_PVP_FLAG_CHANGE, "MAP", <event: number, player: Player, state: boolean>, ""]
      * @values [73, PLAYER_EVENT_ON_RELEASED_GHOST, "MAP", <event: number, player: Player>, ""]
      *
      * @proto cancel = (event, function)

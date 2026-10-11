@@ -518,6 +518,7 @@ YLARegister<Player> PlayerMethods[] =
 {
     // Getters
     { "GetSelection", &LuaPlayer::GetSelection },
+    { "GetSelectionGUID", &LuaPlayer::GetSelectionGUID },
     { "GetGMRank", &LuaPlayer::GetGMRank },
     { "GetGuildId", &LuaPlayer::GetGuildId },
     { "GetCoinage", &LuaPlayer::GetCoinage },

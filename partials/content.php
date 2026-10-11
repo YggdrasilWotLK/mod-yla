@@ -9,17 +9,10 @@ require_once __DIR__ . '/../render.php';
 <section id="content">
   <?php if ($selectedMethod && isset($allMethods[$selectedMethod])): ?>
 
-    <?php
-      $m = $allMethods[$selectedMethod];
-      $ownCount = count($classes[$selectedClass]['methods']);
-      $inhCount = count($allMethods) - $ownCount;
-    ?>
+    <?php $m = $allMethods[$selectedMethod]; ?>
     <div class="breadcrumb breadcrumb-title">
       <a href="?class=<?= urlencode($selectedClass) ?>"><?= htmlspecialchars($selectedClass) ?></a>
       <span class="crumb-sep">&rsaquo;</span><span><?= htmlspecialchars($selectedMethod) ?></span>
-      <?php if ($inhCount > 0): ?>
-        <button id="inh-toggle" aria-pressed="false" title="Show only methods defined on <?= htmlspecialchars($selectedClass) ?>">Hide inherited</button>
-      <?php endif; ?>
     </div>
     <div id="current-method">
       <?= render_method_card($selectedMethod, $m, false, $selectedClass, $classes) ?>
@@ -29,24 +22,26 @@ require_once __DIR__ . '/../render.php';
 
     <h1><?= htmlspecialchars($selectedClass) ?></h1>
 
+    <?php
+      $ownCount = count($classes[$selectedClass]['methods']);
+      $inhCount = count($allMethods) - $ownCount;
+    ?>
     <?php if (!empty($currentClass['inherits'])): ?>
       <div class="inh-chain">
         <span class="inh-chain-label">Inherits:</span>
         <?php foreach ($currentClass['inherits'] as $par): ?>
           <a class="inh-link" href="?class=<?= urlencode($par) ?>"><?= htmlspecialchars($par) ?></a>
         <?php endforeach; ?>
+        <?php if ($inhCount > 0): ?>
+          <button class="inh-toggle" aria-pressed="true" title="Toggle inherited methods">Show inherited</button>
+        <?php endif; ?>
       </div>
     <?php endif; ?>
 
-    <?php
-      $ownCount = count($classes[$selectedClass]['methods']);
-      $inhCount = count($allMethods) - $ownCount;
-    ?>
     <div class="method-count-bar">
       <div class="mcb-item"><span class="mcb-dot-own"></span> <?= $ownCount ?> own methods</div>
       <?php if ($inhCount > 0): ?>
         <div class="mcb-item"><span class="mcb-dot-inh"></span> <?= $inhCount ?> inherited</div>
-        <button id="inh-toggle" aria-pressed="false" title="Show only methods defined on <?= htmlspecialchars($selectedClass) ?>">Hide inherited</button>
       <?php endif; ?>
     </div>
 

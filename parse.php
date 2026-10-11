@@ -329,20 +329,26 @@ function build_tree(array $classes): array {
     return ['children' => $children, 'roots' => $roots];
 }
 
+function search_excerpt(string $desc): string {
+    $desc = preg_replace('/\[\[CODE\]\].*?\[\[\/CODE\]\]/s', ' ', $desc);
+    $desc = preg_replace('/\s+/', ' ', strip_tags($desc));
+    return mb_substr(trim($desc), 0, 300);
+}
+
 function build_search_index(array $classes): array {
     $index = [];
     foreach ($classes as $cls) {
         $index[] = [
             'type' => 'class',
             'name' => $cls['name'],
-            'desc' => mb_substr(strip_tags($cls['desc']), 0, 80),
+            'desc' => search_excerpt($cls['desc']),
         ];
         foreach ($cls['methods'] as $m) {
             $index[] = [
                 'type'  => 'method',
                 'class' => $cls['name'],
                 'name'  => $m['name'],
-                'desc'  => mb_substr(strip_tags($m['desc']), 0, 80),
+                'desc'  => search_excerpt($m['desc']),
             ];
         }
     }

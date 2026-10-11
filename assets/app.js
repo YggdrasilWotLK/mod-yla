@@ -197,6 +197,12 @@
   collapseBtn.addEventListener('click', () => setCollapsed(true));
   expandBtn.addEventListener('click', () => setCollapsed(false));
 
+  // Small screens use the hamburger overlay instead: if the window shrinks
+  // while collapsed, re-enable the sidebar (the hamburger takes over).
+  window.addEventListener('resize', () => {
+    if (!desktop() && app.classList.contains('sidebar-collapsed')) setCollapsed(false);
+  });
+
   let initial = false;
   try { initial = localStorage.getItem('yla-sidebar-collapsed') === '1'; } catch (e) {}
   if (initial && desktop()) setCollapsed(true);

@@ -48,7 +48,7 @@ std::string YLA::lua_folderpath;
 std::string YLA::lua_requirepath;
 std::string YLA::lua_requirecpath;
 YLA* YLA::GYLA = NULL;
-std::shared_ptr<YLA> YLA::GALE_HOLDER;
+std::shared_ptr<YLA> YLA::GYLA_HOLDER;
 std::atomic<bool> YLA::reload{false};
 bool YLA::initialized = false;
 YLA::LockType YLA::lock;
@@ -94,8 +94,8 @@ void YLA::Initialize()
     // Create global YLA (shared-owned; GYLA mirrors it raw)
     {
         YlaStateRef globalRef;
-        GALE_HOLDER = std::shared_ptr<YLA>(new YLA(globalRef, YLA_GLOBAL_STATE));
-        GYLA = GALE_HOLDER.get();
+        GYLA_HOLDER = std::shared_ptr<YLA>(new YLA(globalRef, YLA_GLOBAL_STATE));
+        GYLA = GYLA_HOLDER.get();
     }
 
     // Start file watcher if enabled
@@ -157,8 +157,8 @@ void YLA::Uninitialize()
                 GYLA->eventMgr->SetStates(LUAEVENT_STATE_ERASE);
         }
     }
-    if (GALE_HOLDER)
-        GALE_HOLDER.reset();
+    if (GYLA_HOLDER)
+        GYLA_HOLDER.reset();
     GYLA = NULL;
 
     lua_scripts.clear();
@@ -170,9 +170,9 @@ void YLA::Uninitialize()
 std::shared_ptr<YLA> YLA::LockStateRef(const YlaStateRef& ref)
 {
     if (ref.global)
-        return GALE_HOLDER;
+        return GYLA_HOLDER;
     std::shared_lock lock(g_states_mutex);
-    auto it = g_states.find(ALEMapStateKey(ref.mapId, ref.instanceId));
+    auto it = g_states.find(YLAMapStateKey(ref.mapId, ref.instanceId));
     if (it == g_states.end() || !it->second || it->second->GetStateSeq() != ref.seq)
         return nullptr;
     return it->second;
@@ -183,7 +183,7 @@ std::shared_ptr<YLA> YLA::OwningRef(YLA* raw)
     if (!raw)
         return nullptr;
     if (raw == GYLA)
-        return GALE_HOLDER;
+        return GYLA_HOLDER;
     std::shared_lock lock(g_states_mutex);
     for (auto& [key, state] : g_states)
         if (state && state.get() == raw)
@@ -193,13 +193,13 @@ std::shared_ptr<YLA> YLA::OwningRef(YLA* raw)
 
 std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
 {
-    if (!YLAConfig::GetInstance().ShouldMapLoadALE(mapId))
+    if (!YLAConfig::GetInstance().ShouldMapLoadYLA(mapId))
         return nullptr;
 
     // Strict global -> g_states -> state nesting, matching Uninitialize
-    // and _ReloadALE, so no path ever takes global while holding a state.
+    // and _ReloadYLA, so no path ever takes global while holding a state.
     LOCK_YLA;
-    uint64 key = ALEMapStateKey(mapId, instanceId);
+    uint64 key = YLAMapStateKey(mapId, instanceId);
     uint64 seq = ++s_stateSeq;
     YlaStateRef ref{ false, mapId, instanceId, seq };
     std::shared_ptr<YLA> state;
@@ -219,7 +219,7 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
 
 void YLA::DestroyMapState(uint32 mapId, uint32 instanceId)
 {
-    uint64 key = ALEMapStateKey(mapId, instanceId);
+    uint64 key = YLAMapStateKey(mapId, instanceId);
     std::shared_ptr<YLA> dying;
     {
         std::unique_lock lock(g_states_mutex);
@@ -290,7 +290,7 @@ void YLA::LoadScriptPaths()
     YLA_LOG_DEBUG("[YLA]: Loaded {} scripts in {} ms", lua_scripts.size() + lua_extensions.size(), YLAUtil::GetTimeDiff(oldMSTime));
 }
 
-void YLA::_ReloadALE()
+void YLA::_ReloadYLA()
 {
     LOCK_YLA;
     ASSERT(IsInitialized());
@@ -462,7 +462,7 @@ void YLA::CloseLua()
 
 void YLA::OpenLua()
 {
-    if (!YLAConfig::GetInstance().IsALEEnabled())
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
     {
         YLA_LOG_INFO("[YLA]: YLA is disabled in config");
         return;
@@ -869,7 +869,7 @@ void YLA::GetScripts(std::string path, uint32 mapId)
             if (boost::filesystem::is_directory(dir_iter->status()))
             {
                 std::string folderName = dir_iter->path().filename().generic_string();
-                if (!YLAConfig::GetInstance().ShouldMapLoadALEByFolderName(folderName, mapId))
+                if (!YLAConfig::GetInstance().ShouldMapLoadYLAByFolderName(folderName, mapId))
                     continue;
                 GetScripts(fullpath, mapId);
                 continue;
@@ -898,7 +898,7 @@ void YLA::RunScripts()
 
 void YLA::RunScriptsLocked()
 {
-    if (!YLAConfig::GetInstance().IsALEEnabled())
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
         return;
 
     uint32 oldMSTime = YLAUtil::GetCurrTime();
@@ -928,7 +928,7 @@ void YLA::RunScriptsLocked()
     {
         // Filter by map-prefixed subdirectory (e.g. lua_scripts/0/, lua_scripts/1_...)
         std::string folderName = boost::filesystem::path(it->modulepath).filename().generic_string();
-        if (!YLAConfig::GetInstance().ShouldMapLoadALEByFolderName(folderName, stateMapId))
+        if (!YLAConfig::GetInstance().ShouldMapLoadYLAByFolderName(folderName, stateMapId))
             continue;
 
         // Check that no duplicate names exist
@@ -1850,7 +1850,7 @@ int YLA::CallOneFunction(int number_of_functions, int number_of_arguments, int n
 
 CreatureAI* YLA::GetAI(Creature* creature)
 {
-    if (!YLAConfig::GetInstance().IsALEEnabled())
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
         return NULL;
 
     for (int i = 1; i < Hooks::CREATURE_EVENT_COUNT; ++i)
@@ -1870,7 +1870,7 @@ CreatureAI* YLA::GetAI(Creature* creature)
 
 InstanceData* YLA::GetInstanceData(Map* map)
 {
-    if (!YLAConfig::GetInstance().IsALEEnabled())
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
         return NULL;
 
     for (int i = 1; i < Hooks::INSTANCE_EVENT_COUNT; ++i)
@@ -1938,7 +1938,7 @@ void YLA::FreeInstanceId(uint32 instanceId)
     // under this same state lock, so Clear/unref cannot race Lua use.
     Guard stateGuard(GetStateLock());
 
-    if (!YLAConfig::GetInstance().IsALEEnabled())
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
         return;
 
     for (int i = 1; i < Hooks::INSTANCE_EVENT_COUNT; ++i)

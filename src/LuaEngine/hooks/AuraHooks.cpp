@@ -14,7 +14,7 @@
 using namespace Hooks;
 
 #define START_HOOK(EVENT, ENTRY)\
-    if (!YLAConfig::GetInstance().IsALEEnabled())\
+    if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
     LOCK_YLA_STATE;\
     if (!YLA::IsInitialized())\

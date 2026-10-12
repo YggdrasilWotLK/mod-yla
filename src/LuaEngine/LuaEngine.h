@@ -261,12 +261,13 @@ private:
     YLA& operator=(const YLA&) = delete;
 
     void OpenLua();
-    void CloseLua();
+    void CloseLua(bool fireCloseEvent = true);
     void DestroyBindStores();
     void CreateBindStores();
     void InvalidateObjects();
 
     static void _ReloadYLA();
+    static void ReloadMapStateLocked(std::shared_ptr<YLA> state);
     static void LoadScriptPaths();
     static void GetScripts(std::string path, uint32 mapId = 0);
     static void AddScriptPath(std::string filename, const std::string& fullpath);
@@ -443,7 +444,7 @@ public:
     // Same as RunScripts but assumes the caller already holds LOCK_YLA
     // (and this state's lock where applicable). Never takes global itself,
     // so it preserves the global -> state lock order.
-    void RunScriptsLocked();
+    void RunScriptsLocked(bool fireOpenEvent = true);
     bool ShouldReload() const { return reload; }
     bool HasLuaState() const { return L != NULL; }
     int Register(lua_State* L, uint8 reg, uint32 entry, ObjectGuid guid, uint32 instanceId, uint32 event_id, int functionRef, uint32 shots);

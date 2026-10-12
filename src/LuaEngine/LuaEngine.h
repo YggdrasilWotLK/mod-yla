@@ -547,6 +547,11 @@ public:
     void OnSpawn(GameObject* gameobject);
 
     /* Packet */
+    // Thread-local ExecuteCall depth. Packet hooks skip re-entrant
+    // dispatch when >0 (ABBA: SendAddonMessage from a timer).
+    static uint32& LuaCallDepth() { thread_local uint32 depth = 0; return depth; }
+    static bool IsInLuaCall() { return LuaCallDepth() > 0; }
+
     bool OnPacketSend(WorldSession* session, const WorldPacket& packet);
     void OnPacketSendAny(Player* player, const WorldPacket& packet, bool& result);
     void OnPacketSendOne(Player* player, const WorldPacket& packet, bool& result);

@@ -126,7 +126,6 @@ YLAGlobalRegister GlobalMethods[] =
     { "GetGuildByName", &LuaGlobalFunctions::GetGuildByName },
     { "GetGuildByLeaderGUID", &LuaGlobalFunctions::GetGuildByLeaderGUID },
     { "GetPlayerCount", &LuaGlobalFunctions::GetPlayerCount },
-    { "GetCharacterPetCount", &LuaGlobalFunctions::GetCharacterPetCount },
     { "GetPlayerGUID", &LuaGlobalFunctions::GetPlayerGUID },
     { "GetItemGUID", &LuaGlobalFunctions::GetItemGUID },
     { "GetItemTemplate", &LuaGlobalFunctions::GetItemTemplate },

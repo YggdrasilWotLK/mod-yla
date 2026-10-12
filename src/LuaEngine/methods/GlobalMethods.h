@@ -351,38 +351,6 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Returns the number of rows in `character_pet` for the given owner.
-     *
-     * Works for online and offline players. Uses a prepared statement, so it is
-     * a safe replacement for `CharDBQuery("SELECT COUNT(*) FROM character_pet WHERE owner = " .. guid)`.
-     * For an online [Player] where you already have the object, prefer [Player:GetPetCount]
-     * which reads the in-memory pet stable with no database hit.
-     *
-     * @param uint32 ownerLowGuid : low GUID of the owner, e.g. `player:GetGUIDLow()`. An [ObjectGuid] is also accepted.
-     * @return uint32 petCount
-     */
-    int GetCharacterPetCount(lua_State* L)
-    {
-        uint32 ownerLow = 0;
-        if (lua_type(L, 1) == LUA_TNUMBER)
-            ownerLow = YLA::CHECKVAL<uint32>(L, 1);
-        else
-            ownerLow = YLA::CHECKVAL<ObjectGuid>(L, 1).GetCounter();
-
-        if (!ownerLow)
-        {
-            YLA::Push(L, uint32(0));
-            return 1;
-        }
-
-        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_PET_IDS);
-        stmt->SetData(0, ownerLow);
-        PreparedQueryResult result = CharacterDatabase.Query(stmt);
-        YLA::Push(L, result ? static_cast<uint32>(result->GetRowCount()) : uint32(0));
-        return 1;
-    }
-
-    /**
      * Builds a [Player]'s GUID
      *
      * [Player] GUID consist of low GUID and type ID

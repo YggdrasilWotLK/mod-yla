@@ -27,6 +27,8 @@
 
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <future>
+#include <thread>
 #include <vector>
 #include <ctime>
 #include <sys/stat.h>
@@ -214,6 +216,7 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
         Guard stateGuard(state->GetStateLock());
         state->RunScriptsLocked();
     }
+    YLA_LOG_INFO("[YLA]: state created for map {} inst {}", mapId, instanceId);
     return state;
 }
 
@@ -292,7 +295,7 @@ void YLA::LoadScriptPaths()
 
 void YLA::_ReloadYLA()
 {
-    LOCK_YLA;
+    std::unique_lock<LockType> reloadGuard(GetLock());
     ASSERT(IsInitialized());
 
     if (!sYLA->CanReload())
@@ -321,27 +324,77 @@ void YLA::_ReloadYLA()
         sYLA->RunScriptsLocked();
     }
 
+    // Snapshot, then work per state without the map lock: holding it
+    // across close/open/run starves create/destroy (and workers below).
+    std::vector<std::shared_ptr<YLA>> states;
     {
         std::shared_lock lock(g_states_mutex);
         for (auto& [key, state] : g_states)
+            if (state)
+                states.push_back(state);
+    }
+
+    // Close hooks stay sequential: they run Lua under global->state.
+    for (auto& state : states)
+    {
+        Guard stateGuard(state->GetStateLock());
+        state->OnLuaStateClose();
+    }
+
+    // Workers take only their own state (+ cache locks). The global lock
+    // is released for the join so no worker can block on it, ever.
+    reloadGuard.unlock();
+    {
+        unsigned maxWorkers = std::thread::hardware_concurrency();
+        if (maxWorkers < 2u)
+            maxWorkers = 2u;
+        std::vector<std::future<void>> busy;
+        for (auto& state : states)
         {
-            if (!state)
-                continue;
-            // Map threads run Lua on their state under this same lock;
-            // closing it out from under them would free lua_State mid-call.
-            // CloseLua bumps luaGen so DB/HTTP callbacks bound to the old
-            // registry are dropped, never run on the new one.
-            Guard stateGuard(state->GetStateLock());
-            state->eventMgr->SetStates(LUAEVENT_STATE_ERASE);
-            state->httpManager.DropPending();
-            state->CloseLua();
-            state->OpenLua();
-            state->RunScriptsLocked();
+            busy.push_back(std::async(std::launch::async, &YLA::ReloadMapStateLocked, state));
+            while (busy.size() >= maxWorkers)
+            {
+                busy.front().get();
+                busy.erase(busy.begin());
+            }
         }
+        for (auto& done : busy)
+            done.get();
+    }
+
+    // Open hooks stay sequential, same nesting as a normal load.
+    for (auto& state : states)
+    {
+        LOCK_YLA;
+        Guard stateGuard(state->GetStateLock());
+        state->OnLuaStateOpen();
     }
 
     sYLA->reloadScheduled = false;
     reload = false;
+}
+
+void YLA::ReloadMapStateLocked(std::shared_ptr<YLA> state)
+{
+    // Worker entry: state lock only, never global (the joiner released
+    // it). Close hooks ran up front, open hooks run after the join.
+    try
+    {
+        Guard stateGuard(state->GetStateLock());
+        state->eventMgr->SetStates(LUAEVENT_STATE_ERASE);
+        state->httpManager.DropPending();
+        state->CloseLua(false);
+        state->OpenLua();
+        state->RunScriptsLocked(false);
+    }
+    catch (std::exception const& e)
+    {
+        YLA_LOG_ERROR("[YLA]: reload of map {} inst {} failed: {}", state->GetStateMapId(), state->GetStateInstanceId(), e.what());
+    }
+    catch (...)
+    {
+        YLA_LOG_ERROR("[YLA]: reload of map {} inst {} failed with unknown error", state->GetStateMapId(), state->GetStateInstanceId());
+    }
 }
 
 std::string YLA::SerializeValue(lua_State* L, int idx)
@@ -443,13 +496,14 @@ YLA::~YLA()
     eventMgr = NULL;
 }
 
-void YLA::CloseLua()
+void YLA::CloseLua(bool fireCloseEvent)
 {
     // Invalidate every pending DB/HTTP callback bound to this registry
     // before it is reclaimed. Callers hold this state's lock.
     ++luaGen;
 
-    OnLuaStateClose();
+    if (fireCloseEvent)
+        OnLuaStateClose();
 
     DestroyBindStores();
 
@@ -904,7 +958,7 @@ void YLA::RunScripts()
     RunScriptsLocked();
 }
 
-void YLA::RunScriptsLocked()
+void YLA::RunScriptsLocked(bool fireOpenEvent)
 {
     if (!YLAConfig::GetInstance().IsYLAEnabled())
         return;
@@ -915,15 +969,19 @@ void YLA::RunScriptsLocked()
     uint32 cachedCount = 0;
     uint32 precompiledCount = 0;
     bool cacheEnabled = eConfigMgr->GetOption<bool>("YLA.BytecodeCache", true);
-    
+
     if (cacheEnabled)
         ClearTimestampCache();
 
+    // Local copies: the shared lists must not be sorted in place while
+    // other states load theirs on worker threads.
+    ScriptList extensions = lua_extensions;
+    ScriptList all = lua_scripts;
+    extensions.sort(ScriptPathComparator);
+    all.sort(ScriptPathComparator);
     ScriptList scripts;
-    lua_extensions.sort(ScriptPathComparator);
-    lua_scripts.sort(ScriptPathComparator);
-    scripts.insert(scripts.end(), lua_extensions.begin(), lua_extensions.end());
-    scripts.insert(scripts.end(), lua_scripts.begin(), lua_scripts.end());
+    scripts.insert(scripts.end(), extensions.begin(), extensions.end());
+    scripts.insert(scripts.end(), all.begin(), all.end());
 
     std::unordered_map<std::string, std::string> loaded; // filename, path
 
@@ -1031,9 +1089,11 @@ void YLA::RunScriptsLocked()
     {
         details = fmt::format("({} compiled, {} cached, {} pre-compiled)", compiledCount, cachedCount, precompiledCount);
     }
-    YLA_LOG_INFO("[YLA]: Executed {} Lua scripts in {} ms {}", count, YLAUtil::GetTimeDiff(oldMSTime), details);
+    std::string scope = (stateMapId == YLA_GLOBAL_STATE) ? "global" : fmt::format("map {} inst {}", stateMapId, stateInstanceId);
+    YLA_LOG_INFO("[YLA]: [{}] Executed {} Lua scripts in {} ms {}", scope, count, YLAUtil::GetTimeDiff(oldMSTime), details);
 
-    OnLuaStateOpen();
+    if (fireOpenEvent)
+        OnLuaStateOpen();
 }
 
 void YLA::InvalidateObjects()

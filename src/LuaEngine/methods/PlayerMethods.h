@@ -5654,8 +5654,7 @@ namespace LuaPlayer
      * Returns the total number of pets owned by the [Player].
      *
      * Counts current pet + stabled pets + unslotted pets from the in-memory
-     * pet stable. No database query is performed.
-     * This is a direct replacement for `SELECT COUNT(*) FROM character_pet WHERE owner = <guidLow>`.
+     * pet stable.
      *
      * @return uint32 petCount
      */
@@ -5685,7 +5684,6 @@ namespace LuaPlayer
      * Returns the number of pets the [Player] has in the stable slots.
      *
      * Counts only PET_SAVE_FIRST_STABLE_SLOT .. PET_SAVE_LAST_STABLE_SLOT.
-     * No database query is performed.
      *
      * @return uint32 stabledPetCount
      */

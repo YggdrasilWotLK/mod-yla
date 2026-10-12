@@ -45,8 +45,8 @@ jobs:
         with:
           key: mod-yla-clang-18-${{ inputs.lua_version }}-${{ github.ref_name }}
           restore-keys: |
-            mod-yla-clang-18-${{ inputs.lua_version }}-
-            mod-yla-clang-18-
+            mod-yla-clang-18-${{ inputs.lua_version }}
+            mod-yla-clang-18
           max-size: 1000M
 
       - name: Install build dependencies 🧰

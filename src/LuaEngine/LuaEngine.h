@@ -547,6 +547,13 @@ public:
     void OnSpawn(GameObject* gameobject);
 
     /* Packet */
+    // Thread-local ExecuteCall depth. >0 while this thread runs Lua.
+    // Packet hooks refuse re-entrant dispatch when set: entry paths take
+    // state-only in multistate mode while packet hooks took global->state
+    // (ABBA deadlock via SendAddonMessage from a timer).
+    static uint32& LuaCallDepth() { thread_local uint32 depth = 0; return depth; }
+    static bool IsInLuaCall() { return LuaCallDepth() > 0; }
+
     bool OnPacketSend(WorldSession* session, const WorldPacket& packet);
     void OnPacketSendAny(Player* player, const WorldPacket& packet, bool& result);
     void OnPacketSendOne(Player* player, const WorldPacket& packet, bool& result);

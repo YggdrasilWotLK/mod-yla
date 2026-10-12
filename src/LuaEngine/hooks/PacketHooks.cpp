@@ -16,8 +16,8 @@ using namespace Hooks;
 #define START_HOOK_SERVER(EVENT)\
     if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
-    LOCK_YLA;\
-    /* WORLD dispatch runs Lua on this state: hold its lock too. */\
+    /* State-only: entry paths take state-only in multistate mode, so packet
+       hooks must not take global->state here (ABBA deadlock). */\
     YLA::Guard __yla_world_state_guard(this->GetStateLock());\
     if (!YLA::IsInitialized())\
         return;\
@@ -28,8 +28,7 @@ using namespace Hooks;
 #define START_HOOK_PACKET(EVENT, OPCODE)\
     if (!YLAConfig::GetInstance().IsYLAEnabled())\
         return;\
-    LOCK_YLA;\
-    /* WORLD dispatch runs Lua on this state: hold its lock too. */\
+    /* State-only: see START_HOOK_SERVER. */\
     YLA::Guard __yla_world_state_guard(this->GetStateLock());\
     if (!YLA::IsInitialized())\
         return;\
@@ -39,6 +38,11 @@ using namespace Hooks;
 
 bool YLA::OnPacketSend(WorldSession* session, const WorldPacket& packet)
 {
+    // Re-entrant send from inside Lua (e.g. SendAddonMessage in a timer):
+    // dispatching packet hooks here would re-enter Lua against the lock
+    // order of the outer hook. Allow the packet, skip the callbacks.
+    if (IsInLuaCall())
+        return true;
     bool result = true;
     Player* player = NULL;
     if (session)
@@ -90,6 +94,9 @@ void YLA::OnPacketSendOne(Player* player, const WorldPacket& packet, bool& resul
 
 bool YLA::OnPacketReceive(WorldSession* session, WorldPacket& packet)
 {
+    // Same re-entrancy guard as OnPacketSend.
+    if (IsInLuaCall())
+        return true;
     bool result = true;
     Player* player = NULL;
     if (session)

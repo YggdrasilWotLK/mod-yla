@@ -5649,5 +5649,74 @@ namespace LuaPlayer
         YLA::Push(L, session && session->IsBot());
         return 1;
     }
+
+    /**
+     * Returns the total number of pets owned by the [Player].
+     *
+     * Counts current pet + stabled pets + unslotted pets from the in-memory
+     * pet stable.
+     *
+     * @return uint32 petCount
+     */
+    int GetPetCount(lua_State* L, Player* player)
+    {
+        PetStable const* stable = player->GetPetStable();
+        if (!stable)
+        {
+            YLA::Push(L, uint32(0));
+            return 1;
+        }
+
+        uint32 count = static_cast<uint32>(stable->UnslottedPets.size());
+        if (stable->CurrentPet)
+            ++count;
+        for (auto const& stabledPet : stable->StabledPets)
+        {
+            if (stabledPet)
+                ++count;
+        }
+
+        YLA::Push(L, count);
+        return 1;
+    }
+
+    /**
+     * Returns the number of pets the [Player] has in the stable slots.
+     *
+     * Counts only PET_SAVE_FIRST_STABLE_SLOT .. PET_SAVE_LAST_STABLE_SLOT.
+     *
+     * @return uint32 stabledPetCount
+     */
+    int GetStabledPetCount(lua_State* L, Player* player)
+    {
+        PetStable const* stable = player->GetPetStable();
+        if (!stable)
+        {
+            YLA::Push(L, uint32(0));
+            return 1;
+        }
+
+        uint32 count = 0;
+        for (auto const& stabledPet : stable->StabledPets)
+        {
+            if (stabledPet)
+                ++count;
+        }
+
+        YLA::Push(L, count);
+        return 1;
+    }
+
+    /**
+     * Returns the maximum number of stable slots the [Player] has unlocked.
+     *
+     * @return uint32 maxStableSlots
+     */
+    int GetMaxStableSlots(lua_State* L, Player* player)
+    {
+        PetStable const* stable = player->GetPetStable();
+        YLA::Push(L, stable ? stable->MaxStabledPets : uint32(0));
+        return 1;
+    }
 };
 #endif

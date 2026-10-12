@@ -220,6 +220,10 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
 void YLA::DestroyMapState(uint32 mapId, uint32 instanceId)
 {
     uint64 key = YLAMapStateKey(mapId, instanceId);
+    // Same global -> g_states -> state order as CreateMapState/_ReloadYLA.
+    // Taking a state lock without the global inverts against _ReloadYLA's
+    // g_states-shared + state iteration and deadlocks on map unload races.
+    LOCK_YLA;
     std::shared_ptr<YLA> dying;
     {
         std::unique_lock lock(g_states_mutex);
@@ -322,11 +326,19 @@ void YLA::_ReloadYLA()
     }
 
     {
-        std::shared_lock lock(g_states_mutex);
-        for (auto& [key, state] : g_states)
+        // Snapshot owning references, then release g_states before taking
+        // any state lock: holding g_states shared across CloseLua/OpenLua
+        // inverts against DestroyMapState's state-then-gates-unique order
+        // and deadlocks when an instance unloads mid-reload.
+        std::vector<std::shared_ptr<YLA>> states;
         {
-            if (!state)
-                continue;
+            std::shared_lock lock(g_states_mutex);
+            for (auto& [key, state] : g_states)
+                if (state)
+                    states.push_back(state);
+        }
+        for (auto& state : states)
+        {
             // Map threads run Lua on their state under this same lock;
             // closing it out from under them would free lua_State mid-call.
             // CloseLua bumps luaGen so DB/HTTP callbacks bound to the old

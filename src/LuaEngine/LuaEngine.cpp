@@ -1170,7 +1170,9 @@ bool YLA::ExecuteCall(int params, int res)
 
     // Objects are invalidated when event_level hits 0
     ++event_level;
+    ++LuaCallDepth();
     int result = lua_pcall(L, params, res, usetrace ? base : 0);
+    --LuaCallDepth();
     --event_level;
 
     if (usetrace)

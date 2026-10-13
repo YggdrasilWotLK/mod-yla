@@ -957,6 +957,29 @@ namespace LuaGlobalFunctions
     }
 
     /**
+     * Registers a battlefield event handler. Battlefield events always fire
+     * on the WORLD state, regardless of Multistate mode.
+     *
+     * @table
+     * @columns [ID, Event, State, Parameters, Comment]
+     * @values [1, BFIELD_EVENT_ON_WAR_START, "WORLD", <event: number, battleId: number>, "battleId 1 = Wintergrasp"]
+     * @values [2, BFIELD_EVENT_ON_WAR_END, "WORLD", <event: number, battleId: number, endByTimer: boolean>, "battleId 1 = Wintergrasp"]
+     *
+     * @proto cancel = (event, function)
+     * @proto cancel = (event, function, shots)
+     *
+     * @param uint32 event : battlefield event Id, refer to table above
+     * @param function function : function to register
+     * @param uint32 shots = 0 : the number of times the function will be called, 0 means "always call this function"
+     *
+     * @return function cancel : a function that cancels the binding when called
+     */
+    int RegisterBattlefieldEvent(lua_State* L)
+    {
+        return RegisterEventHelper(L, Hooks::REGTYPE_BATTLEFIELD);
+    }
+
+    /**
      * Registers a [WorldPacket] event handler.
      *
      * In Multistate mode (default), events are either registered to the WORLD state (-1) or the MAP states (map ID). These events will only ever trigger on their respective state.
@@ -2954,6 +2977,33 @@ namespace LuaGlobalFunctions
         {
             uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
             YLA::GetYLA(L)->BGEventBindings->Clear(Key((Hooks::BGEvents)event_type));
+        }
+        return 0;
+    }
+
+    /**
+     * Unbinds event handlers for either all battlefield events, or one type of event.
+     *
+     * If `event_type` is `nil`, all battlefield event handlers are cleared.
+     *
+     * Otherwise, only event handlers for `event_type` are cleared.
+     *
+     * @proto ()
+     * @proto (event_type)
+     * @param uint32 event_type : the event whose handlers will be cleared, see [Global:RegisterBattlefieldEvent]
+     */
+    int ClearBattlefieldEvents(lua_State* L)
+    {
+        typedef EventKey<Hooks::BattlefieldEvents> Key;
+
+        if (lua_isnoneornil(L, 1))
+        {
+            YLA::GetYLA(L)->BattlefieldEventBindings->Clear();
+        }
+        else
+        {
+            uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
+            YLA::GetYLA(L)->BattlefieldEventBindings->Clear(Key((Hooks::BattlefieldEvents)event_type));
         }
         return 0;
     }

@@ -9,6 +9,7 @@
 
 #include "BindingMap.h"
 #include "YLADBCRegistry.h"
+#include "CharacterCache.h"
 
 #include "BanMgr.h"
 #include "GameTime.h"
@@ -977,6 +978,144 @@ namespace LuaGlobalFunctions
     int RegisterBattlefieldHook(lua_State* L)
     {
         return RegisterEventHelper(L, Hooks::REGTYPE_BATTLEFIELD);
+    }
+
+    /**
+     * Returns a snapshot of the server character cache: one row per known
+     * character, online or offline. WORLD state only.
+     *
+     * @return table characters : rows keyed 1..n, each {guidLow, name, accountId, race, class, level, sex, mailCount, guildId, arenaTeamId, groupGuid}
+     */
+    int GetCharacterCache(lua_State* L)
+    {
+        lua_newtable(L);
+        int tbl = lua_gettop(L);
+        uint32 i = 0;
+        for (CharacterCacheEntry const& entry : sCharacterCache->GetCharacterCacheSnapshot())
+        {
+            lua_newtable(L);
+            int row = lua_gettop(L);
+            lua_pushstring(L, "guidLow");
+            YLA::Push(L, entry.Guid.GetCounter());
+            lua_settable(L, row);
+            lua_pushstring(L, "name");
+            YLA::Push(L, entry.Name);
+            lua_settable(L, row);
+            lua_pushstring(L, "accountId");
+            YLA::Push(L, entry.AccountId);
+            lua_settable(L, row);
+            lua_pushstring(L, "race");
+            YLA::Push(L, entry.Race);
+            lua_settable(L, row);
+            lua_pushstring(L, "class");
+            YLA::Push(L, entry.Class);
+            lua_settable(L, row);
+            lua_pushstring(L, "level");
+            YLA::Push(L, entry.Level);
+            lua_settable(L, row);
+            lua_pushstring(L, "sex");
+            YLA::Push(L, entry.Sex);
+            lua_settable(L, row);
+            lua_pushstring(L, "mailCount");
+            YLA::Push(L, entry.MailCount);
+            lua_settable(L, row);
+            lua_pushstring(L, "guildId");
+            YLA::Push(L, entry.GuildId);
+            lua_settable(L, row);
+            lua_pushstring(L, "arenaTeamId");
+            lua_newtable(L);
+            {
+                int at = lua_gettop(L);
+                uint32 k = 0;
+                for (uint32 id : entry.ArenaTeamId)
+                {
+                    YLA::Push(L, id);
+                    lua_rawseti(L, at, ++k);
+                }
+            }
+            lua_settable(L, row);
+            lua_pushstring(L, "groupGuid");
+            YLA::Push(L, entry.GroupGuid);
+            lua_settable(L, row);
+            lua_rawseti(L, tbl, ++i);
+        }
+        lua_settop(L, tbl);
+        return 1;
+    }
+
+    /**
+     * Returns one character cache row by name, online or offline. WORLD state only.
+     *
+     * @param string name : character name
+     * @return table|nil row : {guidLow, name, accountId, race, class, level, sex, mailCount, guildId, arenaTeamId, groupGuid} or nil when unknown
+     */
+    int GetCharacterCacheByName(lua_State* L)
+    {
+        std::string name = YLA::CHECKVAL<std::string>(L, 1);
+        CharacterCacheEntry const* entry = sCharacterCache->GetCharacterCacheByName(name);
+        if (!entry)
+        {
+            lua_pushnil(L);
+            return 1;
+        }
+        lua_newtable(L);
+        int row = lua_gettop(L);
+        lua_pushstring(L, "guidLow");
+        YLA::Push(L, entry->Guid.GetCounter());
+        lua_settable(L, row);
+        lua_pushstring(L, "name");
+        YLA::Push(L, entry->Name);
+        lua_settable(L, row);
+        lua_pushstring(L, "accountId");
+        YLA::Push(L, entry->AccountId);
+        lua_settable(L, row);
+        lua_pushstring(L, "race");
+        YLA::Push(L, entry->Race);
+        lua_settable(L, row);
+        lua_pushstring(L, "class");
+        YLA::Push(L, entry->Class);
+        lua_settable(L, row);
+        lua_pushstring(L, "level");
+        YLA::Push(L, entry->Level);
+        lua_settable(L, row);
+        lua_pushstring(L, "sex");
+        YLA::Push(L, entry->Sex);
+        lua_settable(L, row);
+        lua_pushstring(L, "mailCount");
+        YLA::Push(L, entry->MailCount);
+        lua_settable(L, row);
+        lua_pushstring(L, "guildId");
+        YLA::Push(L, entry->GuildId);
+        lua_settable(L, row);
+        lua_pushstring(L, "arenaTeamId");
+        lua_newtable(L);
+        {
+            int at = lua_gettop(L);
+            uint32 k = 0;
+            for (uint32 id : entry->ArenaTeamId)
+            {
+                YLA::Push(L, id);
+                lua_rawseti(L, at, ++k);
+            }
+        }
+        lua_settable(L, row);
+        lua_pushstring(L, "groupGuid");
+        YLA::Push(L, entry->GroupGuid);
+        lua_settable(L, row);
+        return 1;
+    }
+
+    /**
+     * Returns the account ID of any character by name, online or offline. WORLD state only.
+     *
+     * @param string name : character name
+     * @return uint32 accountId : 0 when unknown
+     */
+    int GetCharacterAccountIdByName(lua_State* L)
+    {
+        std::string name = YLA::CHECKVAL<std::string>(L, 1);
+        YLA::Push(L, sCharacterCache->GetCharacterAccountIdByName(name));
+        return 1;
     }
 
     /**

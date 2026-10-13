@@ -457,6 +457,7 @@ GuildEventBindings(NULL),
 GroupEventBindings(NULL),
 VehicleEventBindings(NULL),
 BGEventBindings(NULL),
+BattlefieldEventBindings(NULL),
 AllCreatureEventBindings(NULL),
 UnitEventBindings(NULL),
 
@@ -568,6 +569,7 @@ void YLA::CreateBindStores()
     VehicleEventBindings     = new BindingMap< EventKey<Hooks::VehicleEvents> >(L);
     UnitEventBindings        = new BindingMap< EventKey<Hooks::UnitEvents> >(L);
     BGEventBindings          = new BindingMap< EventKey<Hooks::BGEvents> >(L);
+    BattlefieldEventBindings = new BindingMap< EventKey<Hooks::BattlefieldEvents> >(L);
     TicketEventBindings      = new BindingMap< EventKey<Hooks::TicketEvents> >(L);
     AllCreatureEventBindings = new BindingMap< EventKey<Hooks::AllCreatureEvents> >(L);
 
@@ -607,6 +609,7 @@ void YLA::DestroyBindStores()
     delete ItemGossipBindings;
     delete PlayerGossipBindings;
     delete BGEventBindings;
+    delete BattlefieldEventBindings;
     delete MapEventBindings;
     delete InstanceEventBindings;
     delete SpellEventBindings;
@@ -633,6 +636,7 @@ void YLA::DestroyBindStores()
     ItemGossipBindings = NULL;
     PlayerGossipBindings = NULL;
     BGEventBindings = NULL;
+    BattlefieldEventBindings = NULL;
     MapEventBindings = NULL;
     InstanceEventBindings = NULL;
     SpellEventBindings = NULL;
@@ -1648,6 +1652,16 @@ int YLA::Register(lua_State* L, uint8 regtype, uint32 entry, ObjectGuid guid, ui
                 auto key = EventKey<Hooks::BGEvents>((Hooks::BGEvents)event_id);
                 bindingID = BGEventBindings->Insert(key, functionRef, shots);
                 createCancelCallback(L, bindingID, BGEventBindings);
+                return 1; // Stack: callback
+            }
+            break;
+
+        case Hooks::REGTYPE_BATTLEFIELD:
+            if (event_id < Hooks::BFIELD_EVENT_COUNT)
+            {
+                auto key = EventKey<Hooks::BattlefieldEvents>((Hooks::BattlefieldEvents)event_id);
+                bindingID = BattlefieldEventBindings->Insert(key, functionRef, shots);
+                createCancelCallback(L, bindingID, BattlefieldEventBindings);
                 return 1; // Stack: callback
             }
             break;

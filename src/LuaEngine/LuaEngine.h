@@ -338,6 +338,7 @@ public:
     BindingMap< EventKey<Hooks::GroupEvents> >*         GroupEventBindings;
     BindingMap< EventKey<Hooks::VehicleEvents> >*       VehicleEventBindings;
     BindingMap< EventKey<Hooks::BGEvents> >*            BGEventBindings;
+    BindingMap< EventKey<Hooks::BattlefieldEvents> >*   BattlefieldEventBindings;
     BindingMap< EventKey<Hooks::AllCreatureEvents> >*   AllCreatureEventBindings;
 
     BindingMap< EntryKey<Hooks::PacketEvents> >*        PacketEventBindings;
@@ -693,6 +694,10 @@ public:
     void OnBGEnd(BattleGround* bg, BattleGroundTypeId bgId, uint32 instanceId, TeamId winner);
     void OnBGCreate(BattleGround* bg, BattleGroundTypeId bgId, uint32 instanceId);
     void OnBGDestroy(BattleGround* bg, BattleGroundTypeId bgId, uint32 instanceId);
+
+    /* Battlefield (world-state only) */
+    void OnBattlefieldWarStart(uint32 battleId);
+    void OnBattlefieldWarEnd(uint32 battleId, bool endByTimer);
 
     /* Ticket */
     void OnTicketCreate(GmTicket* ticket);

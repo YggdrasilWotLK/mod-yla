@@ -216,7 +216,6 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
         Guard stateGuard(state->GetStateLock());
         state->RunScriptsLocked();
     }
-    YLA_LOG_INFO("[YLA]: state created for map {} inst {}", mapId, instanceId);
     return state;
 }
 

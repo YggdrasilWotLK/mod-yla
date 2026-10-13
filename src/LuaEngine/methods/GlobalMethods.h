@@ -958,24 +958,24 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Registers a battlefield hook handler. Battlefield hooks always fire
+     * Registers a battlefield event handler. Battlefield events always fire
      * on the WORLD state, regardless of Multistate mode.
      *
      * @table
      * @columns [ID, Event, State, Parameters, Comment]
-     * @values [1, BFIELD_HOOK_ON_WAR_START, "WORLD", <event: number, battleId: number>, "battleId 1 = Wintergrasp"]
-     * @values [2, BFIELD_HOOK_ON_WAR_END, "WORLD", <event: number, battleId: number, endByTimer: boolean>, "battleId 1 = Wintergrasp"]
+     * @values [1, BFIELD_EVENT_ON_WAR_START, "WORLD", <event: number, battleId: number>, "battleId 1 = Wintergrasp"]
+     * @values [2, BFIELD_EVENT_ON_WAR_END, "WORLD", <event: number, battleId: number, endByTimer: boolean>, "battleId 1 = Wintergrasp"]
      *
      * @proto cancel = (event, function)
      * @proto cancel = (event, function, shots)
      *
-     * @param uint32 event : battlefield hook Id, refer to table above
+     * @param uint32 event : battlefield event Id, refer to table above
      * @param function function : function to register
      * @param uint32 shots = 0 : the number of times the function will be called, 0 means "always call this function"
      *
      * @return function cancel : a function that cancels the binding when called
      */
-    int RegisterBattlefieldHook(lua_State* L)
+    int RegisterBattlefieldEvent(lua_State* L)
     {
         return RegisterEventHelper(L, Hooks::REGTYPE_BATTLEFIELD);
     }
@@ -3121,28 +3121,28 @@ namespace LuaGlobalFunctions
     }
 
     /**
-     * Unbinds event handlers for either all battlefield hooks, or one type of hook.
+     * Unbinds event handlers for either all battlefield events, or one type of event.
      *
-     * If `event_type` is `nil`, all battlefield hook handlers are cleared.
+     * If `event_type` is `nil`, all battlefield event handlers are cleared.
      *
      * Otherwise, only event handlers for `event_type` are cleared.
      *
      * @proto ()
      * @proto (event_type)
-     * @param uint32 event_type : the event whose handlers will be cleared, see [Global:RegisterBattlefieldHook]
+     * @param uint32 event_type : the event whose handlers will be cleared, see [Global:RegisterBattlefieldEvent]
      */
-    int ClearBattlefieldHooks(lua_State* L)
+    int ClearBattlefieldEvents(lua_State* L)
     {
-        typedef EventKey<Hooks::BattlefieldHooks> Key;
+        typedef EventKey<Hooks::BattlefieldEvents> Key;
 
         if (lua_isnoneornil(L, 1))
         {
-            YLA::GetYLA(L)->BattlefieldHookBindings->Clear();
+            YLA::GetYLA(L)->BattlefieldEventBindings->Clear();
         }
         else
         {
             uint32 event_type = YLA::CHECKVAL<uint32>(L, 1);
-            YLA::GetYLA(L)->BattlefieldHookBindings->Clear(Key((Hooks::BattlefieldHooks)event_type));
+            YLA::GetYLA(L)->BattlefieldEventBindings->Clear(Key((Hooks::BattlefieldEvents)event_type));
         }
         return 0;
     }

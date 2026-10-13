@@ -216,7 +216,6 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
         Guard stateGuard(state->GetStateLock());
         state->RunScriptsLocked();
     }
-    YLA_LOG_INFO("[YLA]: state created for map {} inst {}", mapId, instanceId);
     return state;
 }
 
@@ -457,7 +456,7 @@ GuildEventBindings(NULL),
 GroupEventBindings(NULL),
 VehicleEventBindings(NULL),
 BGEventBindings(NULL),
-BattlefieldHookBindings(NULL),
+BattlefieldEventBindings(NULL),
 AllCreatureEventBindings(NULL),
 UnitEventBindings(NULL),
 
@@ -569,7 +568,7 @@ void YLA::CreateBindStores()
     VehicleEventBindings     = new BindingMap< EventKey<Hooks::VehicleEvents> >(L);
     UnitEventBindings        = new BindingMap< EventKey<Hooks::UnitEvents> >(L);
     BGEventBindings          = new BindingMap< EventKey<Hooks::BGEvents> >(L);
-    BattlefieldHookBindings = new BindingMap< EventKey<Hooks::BattlefieldHooks> >(L);
+    BattlefieldEventBindings = new BindingMap< EventKey<Hooks::BattlefieldEvents> >(L);
     TicketEventBindings      = new BindingMap< EventKey<Hooks::TicketEvents> >(L);
     AllCreatureEventBindings = new BindingMap< EventKey<Hooks::AllCreatureEvents> >(L);
 
@@ -609,7 +608,7 @@ void YLA::DestroyBindStores()
     delete ItemGossipBindings;
     delete PlayerGossipBindings;
     delete BGEventBindings;
-    delete BattlefieldHookBindings;
+    delete BattlefieldEventBindings;
     delete MapEventBindings;
     delete InstanceEventBindings;
     delete SpellEventBindings;
@@ -636,7 +635,7 @@ void YLA::DestroyBindStores()
     ItemGossipBindings = NULL;
     PlayerGossipBindings = NULL;
     BGEventBindings = NULL;
-    BattlefieldHookBindings = NULL;
+    BattlefieldEventBindings = NULL;
     MapEventBindings = NULL;
     InstanceEventBindings = NULL;
     SpellEventBindings = NULL;
@@ -1659,11 +1658,11 @@ int YLA::Register(lua_State* L, uint8 regtype, uint32 entry, ObjectGuid guid, ui
             break;
 
         case Hooks::REGTYPE_BATTLEFIELD:
-            if (event_id < Hooks::BFIELD_HOOK_COUNT)
+            if (event_id < Hooks::BFIELD_EVENT_COUNT)
             {
-                auto key = EventKey<Hooks::BattlefieldHooks>((Hooks::BattlefieldHooks)event_id);
-                bindingID = BattlefieldHookBindings->Insert(key, functionRef, shots);
-                createCancelCallback(L, bindingID, BattlefieldHookBindings);
+                auto key = EventKey<Hooks::BattlefieldEvents>((Hooks::BattlefieldEvents)event_id);
+                bindingID = BattlefieldEventBindings->Insert(key, functionRef, shots);
+                createCancelCallback(L, bindingID, BattlefieldEventBindings);
                 return 1; // Stack: callback
             }
             break;

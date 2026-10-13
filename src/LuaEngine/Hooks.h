@@ -381,11 +381,11 @@ namespace Hooks
         BG_EVENT_COUNT
     };
 
-    enum BattlefieldHooks
+    enum BattlefieldEvents
     {
-        BFIELD_HOOK_ON_WAR_START                       = 1,    // (event, battleId) - Fires on the WORLD state
-        BFIELD_HOOK_ON_WAR_END                         = 2,    // (event, battleId, endByTimer) - Fires on the WORLD state
-        BFIELD_HOOK_COUNT
+        BFIELD_EVENT_ON_WAR_START                       = 1,    // (event, battleId) - Fires on the WORLD state
+        BFIELD_EVENT_ON_WAR_END                         = 2,    // (event, battleId, endByTimer) - Fires on the WORLD state
+        BFIELD_EVENT_COUNT
     };
 
     enum InstanceEvents

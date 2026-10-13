@@ -72,7 +72,7 @@ YLAGlobalRegister GlobalMethods[] =
     { "RegisterItemGossipEvent", &LuaGlobalFunctions::RegisterItemGossipEvent },
     { "RegisterPlayerGossipEvent", &LuaGlobalFunctions::RegisterPlayerGossipEvent },
     { "RegisterBGEvent", &LuaGlobalFunctions::RegisterBGEvent },
-    { "RegisterBattlefieldHook", &LuaGlobalFunctions::RegisterBattlefieldHook },
+    { "RegisterBattlefieldEvent", &LuaGlobalFunctions::RegisterBattlefieldEvent },
     { "RegisterMapEvent", &LuaGlobalFunctions::RegisterMapEvent },
     { "RegisterInstanceEvent", &LuaGlobalFunctions::RegisterInstanceEvent },
     { "RegisterTicketEvent", &LuaGlobalFunctions::RegisterTicketEvent },
@@ -82,7 +82,7 @@ YLAGlobalRegister GlobalMethods[] =
 
 
     { "ClearBattleGroundEvents", &LuaGlobalFunctions::ClearBattleGroundEvents },
-    { "ClearBattlefieldHooks", &LuaGlobalFunctions::ClearBattlefieldHooks },
+    { "ClearBattlefieldEvents", &LuaGlobalFunctions::ClearBattlefieldEvents },
     { "ClearCreatureEvents", &LuaGlobalFunctions::ClearCreatureEvents },
     { "ClearAreaTriggerEvents", &LuaGlobalFunctions::ClearAreaTriggerEvents },
     { "ClearUniqueCreatureEvents", &LuaGlobalFunctions::ClearUniqueCreatureEvents },

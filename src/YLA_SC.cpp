@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Battlefield.h"
 #include "Chat.h"
 #include "YLAEventMgr.h"
 #include "YlaAlive.h"
@@ -368,6 +369,27 @@ public:
     void OnBattlegroundCreate(Battleground* bg) override
     {
         YLA::GetMapStateOrGlobal(bg->GetMapId(), bg->GetInstanceID())->OnBGCreate(bg, bg->GetBgTypeID(), bg->GetInstanceID());
+    }
+};
+
+class YLA_BattlefieldScript : public AllBattlefieldScript
+{
+public:
+    YLA_BattlefieldScript() : AllBattlefieldScript("YLA_BattlefieldScript", {
+        ALLBATTLEFIELDHOOK_ON_BATTLEFIELD_START,
+        ALLBATTLEFIELDHOOK_ON_BATTLEFIELD_END
+    }) { }
+
+    void OnBattlefieldStart(Battlefield* bf) override
+    {
+        if (!bf) return;
+        gYLA->OnBattlefieldWarStart(bf->GetBattleId());
+    }
+
+    void OnBattlefieldEnd(Battlefield* bf, bool endByTimer) override
+    {
+        if (!bf) return;
+        gYLA->OnBattlefieldWarEnd(bf->GetBattleId(), endByTimer);
     }
 };
 
@@ -1373,6 +1395,7 @@ void AddSC_YLA()
     new YLA_AllMapScript();
     new YLA_AuctionHouseScript();
     new YLA_BGScript();
+    new YLA_BattlefieldScript();
     new YLA_CommandSC();
     new YLA_YLAScript();
     new YLA_GameEventScript();

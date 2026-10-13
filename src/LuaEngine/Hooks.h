@@ -84,6 +84,7 @@ namespace Hooks
         REGTYPE_ITEM_GOSSIP,
         REGTYPE_PLAYER_GOSSIP,
         REGTYPE_BG,
+        REGTYPE_BATTLEFIELD,
         REGTYPE_MAP,
         REGTYPE_INSTANCE,
         REGTYPE_TICKET,
@@ -378,6 +379,13 @@ namespace Hooks
         BG_EVENT_ON_CREATE                              = 3,    // (event, bg, bgId, instanceId) - Needs to be added to TC
         BG_EVENT_ON_PRE_DESTROY                         = 4,    // (event, bg, bgId, instanceId) - Needs to be added to TC
         BG_EVENT_COUNT
+    };
+
+    enum BattlefieldHooks
+    {
+        BFIELD_HOOK_ON_WAR_START                       = 1,    // (event, battleId) - Fires on the WORLD state
+        BFIELD_HOOK_ON_WAR_END                         = 2,    // (event, battleId, endByTimer) - Fires on the WORLD state
+        BFIELD_HOOK_COUNT
     };
 
     enum InstanceEvents

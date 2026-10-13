@@ -402,6 +402,9 @@ namespace LuaPlayerShadow
     /**
      * Returns a table of [Shadow] bots owned by this [Player].
      *
+     * Snapshot under lock: safe from any state/thread. Pushed objects
+     * are liveness-checked on use as usual.
+     *
      * @return table bots
      */
     inline int GetBots(lua_State* L, Player* player)
@@ -413,10 +416,10 @@ namespace LuaPlayerShadow
         {
             if (auto mgr = sShadowsMgr->GetShadowMgr(player))
             {
+                std::vector<Player*> bots = mgr->GetShadowsSnapshot();
                 uint32 i = 0;
-                for (auto it = mgr->GetShadowsBegin(); it != mgr->GetShadowsEnd(); ++it)
+                for (Player* bot : bots)
                 {
-                    Player* bot = it->second;
                     if (!bot)
                         continue;
                     YLA::Push(L, ShadowPlayer::FromPlayer(bot));

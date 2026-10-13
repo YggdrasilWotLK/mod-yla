@@ -984,7 +984,7 @@ namespace LuaGlobalFunctions
      * Returns a snapshot of the server character cache: one row per known
      * character, online or offline. WORLD state only.
      *
-     * @return table characters : rows keyed 1..n, each {guidLow, name, accountId, race, class, level}
+     * @return table characters : rows keyed 1..n, each {guidLow, name, accountId, race, class, level, sex}
      */
     int GetCharacterCache(lua_State* L)
     {
@@ -1013,6 +1013,9 @@ namespace LuaGlobalFunctions
             lua_pushstring(L, "level");
             YLA::Push(L, entry.Level);
             lua_settable(L, row);
+            lua_pushstring(L, "sex");
+            YLA::Push(L, entry.Sex);
+            lua_settable(L, row);
             lua_rawseti(L, tbl, ++i);
         }
         lua_settop(L, tbl);
@@ -1023,7 +1026,7 @@ namespace LuaGlobalFunctions
      * Returns one character cache row by name, online or offline. WORLD state only.
      *
      * @param string name : character name
-     * @return table|nil row : {guidLow, name, accountId, race, class, level} or nil when unknown
+     * @return table|nil row : {guidLow, name, accountId, race, class, level, sex} or nil when unknown
      */
     int GetCharacterCacheByName(lua_State* L)
     {
@@ -1053,6 +1056,9 @@ namespace LuaGlobalFunctions
         lua_settable(L, row);
         lua_pushstring(L, "level");
         YLA::Push(L, entry->Level);
+        lua_settable(L, row);
+        lua_pushstring(L, "sex");
+        YLA::Push(L, entry->Sex);
         lua_settable(L, row);
         return 1;
     }

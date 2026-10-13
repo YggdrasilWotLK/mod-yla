@@ -12,6 +12,7 @@ extern "C"
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include <type_traits>
 };
 #include "LuaEngine.h"
 #include "YLACompat.h"
@@ -169,9 +170,10 @@ struct YLARegister
     const char* name;
     int(*mfunc)(lua_State*, T*);
     MethodRegisterState regState;
+    bool allowCrossMap;
 
-    YLARegister(const char* name, int(*func)(lua_State*, T*), MethodRegisterState state = METHOD_REG_ALL)
-        : name(name), mfunc(func), regState(state) {}
+    YLARegister(const char* name, int(*func)(lua_State*, T*), MethodRegisterState state = METHOD_REG_ALL, bool crossMap = false)
+        : name(name), mfunc(func), regState(state), allowCrossMap(crossMap) {}
 
     YLARegister(const char* name, MethodRegisterState state = METHOD_REG_ALL)
         : name(name), mfunc(nullptr), regState(state) {}
@@ -466,6 +468,16 @@ public:
         if (!obj)
             return 0;
         YLARegister<T>* l = static_cast<YLARegister<T>*>(lua_touserdata(L, lua_upvalueindex(1)));
+        if constexpr (std::is_base_of_v<WorldObject, T>)
+        {
+            // Cross-map objects race their owner's map thread: only marked
+            // (deferred-safe) methods run on them from map states.
+            WorldObject* wobj = static_cast<WorldObject*>(obj);
+            YLA* state = YLA::GetYLA(L);
+            if (state && !l->allowCrossMap && state->GetStateMapId() != YLA_GLOBAL_STATE && wobj->IsInWorld() &&
+                (wobj->GetMapId() != state->GetStateMapId() || wobj->GetInstanceId() != state->GetStateInstanceId()))
+                return luaL_error(L, "attempt to call method '%s' on an object from another map", l->name);
+        }
         int top = lua_gettop(L);
         int expected = l->mfunc(L, obj);
         int args = lua_gettop(L) - top;

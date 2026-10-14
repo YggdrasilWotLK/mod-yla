@@ -139,7 +139,11 @@ void YLAEventProcessor::Update(uint32 diff)
             else if (!guidCaptured)
                 liveObj = obj;
 
-            due.push_back(DueCall{ luaEvent, delay, repeatsArg, remove, liveObj, guidCaptured && !objGuid.IsEmpty() && !liveObj, luaEvent->owner, massSweep.load(std::memory_order_acquire) });
+            // Map-state timers whose target left the map go stale: the
+            // callback would run on the old state with a cross-map object.
+            bool movedAway = liveObj && !luaEvent->owner.global && liveObj->IsInWorld() &&
+                (liveObj->GetMapId() != luaEvent->owner.mapId || liveObj->GetInstanceId() != luaEvent->owner.instanceId);
+            due.push_back(DueCall{ luaEvent, delay, repeatsArg, remove, liveObj, (guidCaptured && !objGuid.IsEmpty() && !liveObj) || movedAway, luaEvent->owner, massSweep.load(std::memory_order_acquire) });
         }
     }
 

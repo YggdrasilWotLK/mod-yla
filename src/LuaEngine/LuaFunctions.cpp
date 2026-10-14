@@ -539,7 +539,7 @@ YLARegister<Player> PlayerMethods[] =
     { "GetItemCount", &LuaPlayer::GetItemCount },
     { "GetGroup", &LuaPlayer::GetGroup },
     { "GetGuild", &LuaPlayer::GetGuild },
-    { "GetAccountId", &LuaPlayer::GetAccountId },
+    { "GetAccountId", &LuaPlayer::GetAccountId, METHOD_REG_ALL, CROSSMAP_ALLOW },
     { "GetAccountName", &LuaPlayer::GetAccountName },
     { "GetCompletedQuestsCount", &LuaPlayer::GetCompletedQuestsCount },
     { "GetArenaPoints", &LuaPlayer::GetArenaPoints },

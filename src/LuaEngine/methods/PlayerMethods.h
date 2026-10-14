@@ -1366,7 +1366,7 @@ namespace LuaPlayer
      */
     int GetMailCount(lua_State* L, Player* player)
     {
-        const CharacterCacheEntry* cache = sCharacterCache->GetCharacterCacheByGuid(player->GetGUID());
+        const Optional<CharacterCacheEntry> cache = sCharacterCache->GetCharacterCacheByGuid(player->GetGUID());
         if (cache)
         {
             YLA::Push(L, static_cast<uint32>(cache->MailCount));

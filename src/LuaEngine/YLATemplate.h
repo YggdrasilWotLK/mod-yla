@@ -29,6 +29,12 @@ enum MethodRegisterState
     METHOD_REG_ALL   = 2
 };
 
+enum CrossMapPolicy
+{
+    CROSSMAP_BLOCK = 0,
+    CROSSMAP_ALLOW = 1
+};
+
 struct YLAGlobalRegister
 {
     const char* name;
@@ -170,13 +176,13 @@ struct YLARegister
     const char* name;
     int(*mfunc)(lua_State*, T*);
     MethodRegisterState regState;
-    bool allowCrossMap;
+    CrossMapPolicy allowCrossMap;
 
-    YLARegister(const char* name, int(*func)(lua_State*, T*), MethodRegisterState state = METHOD_REG_ALL, bool crossMap = false)
+    YLARegister(const char* name, int(*func)(lua_State*, T*), MethodRegisterState state = METHOD_REG_ALL, CrossMapPolicy crossMap = CROSSMAP_BLOCK)
         : name(name), mfunc(func), regState(state), allowCrossMap(crossMap) {}
 
     YLARegister(const char* name, MethodRegisterState state = METHOD_REG_ALL)
-        : name(name), mfunc(nullptr), regState(state) {}
+        : name(name), mfunc(nullptr), regState(state), allowCrossMap(CROSSMAP_BLOCK) {}
 };
 
 template<typename T>

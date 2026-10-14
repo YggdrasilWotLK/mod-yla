@@ -268,7 +268,7 @@ YLARegister<Object> ObjectMethods[] =
 YLARegister<WorldObject> WorldObjectMethods[] =
 {
     // Getters
-    { "GetName", &LuaWorldObject::GetName },
+    { "GetName", &LuaWorldObject::GetName, METHOD_REG_ALL, true },
     { "GetMap", &LuaWorldObject::GetMap },
     { "GetPhaseMask", &LuaWorldObject::GetPhaseMask },
     { "SetPhaseMask", &LuaWorldObject::SetPhaseMask },

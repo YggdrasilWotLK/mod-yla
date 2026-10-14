@@ -1366,7 +1366,7 @@ namespace LuaPlayer
      */
     int GetMailCount(lua_State* L, Player* player)
     {
-        const CharacterCacheEntry* cache = sCharacterCache->GetCharacterCacheByGuid(player->GetGUID());
+        const Optional<CharacterCacheEntry> cache = sCharacterCache->GetCharacterCacheByGuid(player->GetGUID());
         if (cache)
         {
             YLA::Push(L, static_cast<uint32>(cache->MailCount));
@@ -1581,7 +1581,9 @@ namespace LuaPlayer
      */
     int GetAccountId(lua_State* L, Player* player)
     {
-        YLA::Push(L, player->GetSession()->GetAccountId());
+        // Via the character cache, not the session: sessions are torn
+        // down on their own timeline, the cache entry outlives logout.
+        YLA::Push(L, sCharacterCache->GetCharacterAccountIdByGuid(player->GetGUID()));
         return 1;
     }
 

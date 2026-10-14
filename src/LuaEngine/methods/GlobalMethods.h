@@ -1052,7 +1052,7 @@ namespace LuaGlobalFunctions
     int GetCharacterCacheByName(lua_State* L)
     {
         std::string name = YLA::CHECKVAL<std::string>(L, 1);
-        CharacterCacheEntry const* entry = sCharacterCache->GetCharacterCacheByName(name);
+        Optional<CharacterCacheEntry> entry = sCharacterCache->GetCharacterCacheByName(name);
         if (!entry)
         {
             lua_pushnil(L);

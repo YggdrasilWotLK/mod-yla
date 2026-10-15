@@ -153,23 +153,6 @@ public:
     // Null when the pointer is not a live state.
     static std::shared_ptr<YLA> OwningRef(YLA* raw);
 
-    static void RunScriptsOnAllMapStates()
-    {
-        LOCK_YLA;
-        std::vector<std::shared_ptr<YLA>> states;
-        {
-            std::shared_lock lock(g_states_mutex);
-            for (auto& [key, state] : g_states)
-                if (state)
-                    states.push_back(state);
-        }
-        for (auto& state : states)
-        {
-            Guard stateGuard(state->GetStateLock());
-            state->RunScriptsLocked();
-        }
-    }
-    
     // Runtime-persistent object data cache, keyed by ObjectGuid
     static std::unordered_map<ObjectGuid, std::unordered_map<std::string, std::string>> objectDataCache;
     static std::shared_mutex objectDataMutex;

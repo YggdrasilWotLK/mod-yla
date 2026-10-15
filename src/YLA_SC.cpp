@@ -1293,9 +1293,9 @@ public:
     void OnBeforeWorldInitialized() override
     {
         ///- Run YLA scripts.
-        // in multithread foreach: run scripts
+        // Map states already ran theirs in OnCreateMap; re-running them
+        // here only re-fires OnLuaStateOpen and logs "Executed 0 scripts".
         gYLA->RunScripts();
-        YLA::RunScriptsOnAllMapStates();
         gYLA->OnConfigLoad(false, false); // Must be done after YLA is initialized and scripts have run.
     }
 };

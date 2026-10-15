@@ -9,6 +9,7 @@
 
 #include "YLAInstanceAI.h"
 #include "ObjectAccessor.h"
+#include <mutex>
 #include <shared_mutex>
 
 /***
@@ -366,6 +367,7 @@ namespace LuaMap
 
         const auto& creatures = map->GetCreatureBySpawnIdStore();
 
+        std::lock_guard<std::recursive_mutex> storeGuard(*map->GetStoreLock());
         lua_createtable(L, creatures.size(), 0);
         int tbl = lua_gettop(L);
 
@@ -399,12 +401,15 @@ namespace LuaMap
 
         std::vector<Creature*> filteredCreatures;
 
-        for (const auto& pair : map->GetCreatureBySpawnIdStore())
         {
-            Creature* creature = pair.second;
-            if (areaId == -1 || creature->GetAreaId() == (uint32)areaId)
+            std::lock_guard<std::recursive_mutex> storeGuard(*map->GetStoreLock());
+            for (const auto& pair : map->GetCreatureBySpawnIdStore())
             {
-                filteredCreatures.push_back(creature);
+                Creature* creature = pair.second;
+                if (areaId == -1 || creature->GetAreaId() == (uint32)areaId)
+                {
+                    filteredCreatures.push_back(creature);
+                }
             }
         }
 

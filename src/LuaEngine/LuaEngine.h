@@ -215,6 +215,16 @@ private:
     static std::unique_ptr<YLAFileWatcher> fileWatcher;
     static std::atomic<uint64> s_stateSeq;
 
+    // Startup-phase deferred map loads, guarded by s_startupMutex (never take
+    // the global lock while holding it). While s_startupPhase is set,
+    // CreateMapState queues states into s_startupPending instead of running
+    // scripts inline; dispatches to them no-op on missing bindings until the
+    // join point runs their scripts exactly once (incl. OnLuaStateOpen).
+    static bool s_startupPhase;
+    static std::mutex s_startupMutex;
+    static std::vector<std::shared_ptr<YLA>> s_startupPending;
+    static void RunPendingStateScripts(std::shared_ptr<YLA> state);
+
     static ScriptList lua_scripts;
     static ScriptList lua_extensions;
     static std::string lua_folderpath;
@@ -371,6 +381,12 @@ public:
 
     static std::shared_ptr<YLA> CreateMapState(uint32 mapId, uint32 instanceId = 0);
     static void DestroyMapState(uint32 mapId, uint32 instanceId = 0);
+
+    // Joins startup-deferred map script loads with a bounded worker pool
+    // (mirrors _ReloadYLA). Called once from OnBeforeWorldInitialized after
+    // the global state has run its scripts. No locks held across the join;
+    // workers take only their own state lock.
+    static void RunPendingStartupMapLoads();
 
     static YLA* GetYLA(lua_State* L)
     {

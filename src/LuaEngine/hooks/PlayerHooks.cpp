@@ -926,3 +926,12 @@ void YLA::OnPlayerDamage(Player* player, Unit* target, uint32& damage)
 
     CleanUpStack(3);
 }
+
+// MAP
+void YLA::OnPlayerDisplayIdChange(Player* player, uint32 displayId)
+{
+    START_HOOK_MAP(PLAYER_EVENT_ON_DISPLAYID_CHANGE);
+    Push(player);
+    Push(displayId);
+    CallAllFunctions(PlayerEventBindings, key);
+}

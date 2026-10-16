@@ -364,3 +364,11 @@ void YLA::OnCreatureDamage(Creature* me, Unit* target, uint32& damage)
 
     CleanUpStack(3);
 }
+
+void YLA::OnCreatureDisplayIdChange(Creature* creature, uint32 displayId)
+{
+    START_HOOK(CREATURE_EVENT_ON_DISPLAYID_CHANGE, creature);
+    Push(creature);
+    Push(displayId);
+    CallAllFunctions(CreatureEventBindings, CreatureUniqueBindings, entry_key, unique_key);
+}

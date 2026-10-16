@@ -1377,7 +1377,12 @@ public:
     void OnDisplayIdChange(Unit* unit, uint32 displayId) override
     {
         if (!unit) return;
-        YLA::GetMapStateOrGlobal(unit->GetMapId(), unit->GetInstanceId())->OnUnitDisplayIdChange(unit, displayId);
+        auto E = YLA::GetMapStateOrGlobal(unit->GetMapId(), unit->GetInstanceId());
+        E->OnUnitDisplayIdChange(unit, displayId);
+        if (unit->IsPlayer())
+            E->OnPlayerDisplayIdChange(unit->ToPlayer(), displayId);
+        if (unit->IsCreature())
+            E->OnCreatureDisplayIdChange(unit->ToCreature(), displayId);
     }
 
     void OnUnitSetShapeshiftForm(Unit* unit, uint8 form) override

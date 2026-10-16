@@ -61,6 +61,11 @@ std::atomic<uint64> YLA::s_stateSeq{0};
 std::map<uint64, std::shared_ptr<YLA>> YLA::g_states;
 std::shared_mutex YLA::g_states_mutex;
 
+// Startup-phase deferred map loads (see LuaEngine.h)
+bool YLA::s_startupPhase = false;
+std::mutex YLA::s_startupMutex;
+std::vector<std::shared_ptr<YLA>> YLA::s_startupPending;
+
 // Runtime-persistent object and map data caches
 std::unordered_map<ObjectGuid, std::unordered_map<std::string, std::string>> YLA::objectDataCache;
 std::shared_mutex YLA::objectDataMutex;
@@ -92,6 +97,14 @@ void YLA::Initialize()
     // Must be before creating GYLA
     // This is checked on YLA creation
     initialized = true;
+
+    // From here until OnBeforeWorldInitialized joins them, map states queue
+    // script loads instead of running ~250 ms inline on the startup thread.
+    {
+        std::lock_guard<std::mutex> slock(s_startupMutex);
+        s_startupPhase = true;
+        s_startupPending.clear();
+    }
 
     // Create global YLA (shared-owned; GYLA mirrors it raw)
     {
@@ -163,6 +176,12 @@ void YLA::Uninitialize()
         GYLA_HOLDER.reset();
     GYLA = NULL;
 
+    {
+        std::lock_guard<std::mutex> slock(s_startupMutex);
+        s_startupPhase = false;
+        s_startupPending.clear();
+    }
+
     lua_scripts.clear();
     lua_extensions.clear();
 
@@ -212,6 +231,18 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
         g_states[key] = state;
     }
 
+    // During startup, defer the ~250 ms script load: queue it for the bounded
+    // parallel join in OnBeforeWorldInitialized so map creation stays cheap
+    // and loads overlap. Runtime creation stays synchronous.
+    {
+        std::lock_guard<std::mutex> slock(s_startupMutex);
+        if (s_startupPhase)
+        {
+            s_startupPending.push_back(state);
+            return state;
+        }
+    }
+
     {
         Guard stateGuard(state->GetStateLock());
         state->RunScriptsLocked();
@@ -249,6 +280,58 @@ void YLA::DestroyMapState(uint32 mapId, uint32 instanceId)
         if (it != g_states.end() && it->second == dying)
             g_states.erase(it);
     }
+}
+
+void YLA::RunPendingStateScripts(std::shared_ptr<YLA> state)
+{
+    // Worker entry: state lock only, never global (mirrors
+    // ReloadMapStateLocked). The joiner released all locks for the join so
+    // no worker can block on them, ever.
+    try
+    {
+        Guard stateGuard(state->GetStateLock());
+        state->RunScriptsLocked();
+    }
+    catch (std::exception const& e)
+    {
+        YLA_LOG_ERROR("[YLA]: startup load of map {} inst {} failed: {}", state->GetStateMapId(), state->GetStateInstanceId(), e.what());
+    }
+    catch (...)
+    {
+        YLA_LOG_ERROR("[YLA]: startup load of map {} inst {} failed with unknown error", state->GetStateMapId(), state->GetStateInstanceId());
+    }
+}
+
+void YLA::RunPendingStartupMapLoads()
+{
+    std::vector<std::shared_ptr<YLA>> pending;
+    {
+        std::lock_guard<std::mutex> lock(s_startupMutex);
+        s_startupPhase = false;
+        pending.swap(s_startupPending);
+    }
+    if (pending.empty())
+        return;
+
+    YLA_LOG_INFO("[YLA]: Loading scripts on {} map states in parallel...", pending.size());
+
+    // Bounded pool, same pattern as _ReloadYLA. Map states created after
+    // this point (runtime instances) load synchronously in CreateMapState.
+    unsigned maxWorkers = std::thread::hardware_concurrency();
+    if (maxWorkers < 2u)
+        maxWorkers = 2u;
+    std::vector<std::future<void>> busy;
+    for (auto& state : pending)
+    {
+        busy.push_back(std::async(std::launch::async, &YLA::RunPendingStateScripts, state));
+        while (busy.size() >= maxWorkers)
+        {
+            busy.front().get();
+            busy.erase(busy.begin());
+        }
+    }
+    for (auto& done : busy)
+        done.get();
 }
 
 void YLA::LoadScriptPaths()

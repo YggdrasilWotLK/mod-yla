@@ -243,6 +243,7 @@ namespace Hooks
         PLAYER_EVENT_ON_HEAL                        =     65,       // (event, player, target, gain) - Can return new heal amount
         PLAYER_EVENT_ON_DAMAGE                      =     66,       // (event, player, target, damage) - Can return new damage amount
         PLAYER_EVENT_ON_PVP_FLAG_CHANGE             =     67,       // (event, player, state)
+        PLAYER_EVENT_ON_DISPLAYID_CHANGE            =     68,       // (event, player, displayId)
         PLAYER_EVENT_ON_RELEASED_GHOST              =     73,       // (event, player)
 
         PLAYER_EVENT_COUNT
@@ -333,6 +334,7 @@ namespace Hooks
         CREATURE_EVENT_ON_AURA_APPLY                      = 38, // (event, creature, aura)
         CREATURE_EVENT_ON_HEAL                            = 39, // (event, creature, target, gain) - Can return new heal amount
         CREATURE_EVENT_ON_DAMAGE                          = 40, // (event, creature, target, damage) - Can return new damage amount
+        CREATURE_EVENT_ON_DISPLAYID_CHANGE                = 41, // (event, creature, displayId)
         CREATURE_EVENT_COUNT
     };
 

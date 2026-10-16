@@ -530,6 +530,7 @@ public:
     void OnCreatureAuraApply(Creature* me, Aura* aura);
     void OnCreatureHeal(Creature* me, Unit* target, uint32& gain);
     void OnCreatureDamage(Creature* me, Unit* target, uint32& gain);
+    void OnCreatureDisplayIdChange(Creature* creature, uint32 displayId);
 
     /* GameObject */
     void OnDummyEffect(WorldObject* pCaster, uint32 spellId, SpellEffIndex effIndex, GameObject* pTarget);
@@ -613,6 +614,7 @@ public:
     void OnPlayerAuraApply(Player* player, Aura* aura);
     void OnPlayerHeal(Player* player, Unit* target, uint32& gain);
     void OnPlayerDamage(Player* player, Unit* target, uint32& gain);
+    void OnPlayerDisplayIdChange(Player* player, uint32 displayId);
 
     /* Vehicle */
     void OnInstall(Vehicle* vehicle);

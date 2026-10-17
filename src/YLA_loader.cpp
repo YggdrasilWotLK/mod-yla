@@ -29,3 +29,16 @@ void Addmod_aleScripts()
 {
     Addmod_ylaScripts();
 }
+
+// Load order: register YLA's scripts before other modules (e.g. mod-shadows),
+// so player-chat hooks such as PLAYER_EVENT_ON_WHISPER run first
+int Addmod_ylaLoadOrder()
+{
+    return 1;
+}
+
+// Compat: folder still checked out as modules/mod-ale until repo rename
+int Addmod_aleLoadOrder()
+{
+    return Addmod_ylaLoadOrder();
+}

@@ -184,7 +184,7 @@ namespace LuaWorldObject
         Unit* target = NULL;
         YLAUtil::WorldObjectInRangeCheck checker(true, obj, range, TYPEMASK_PLAYER, 0, hostile, dead);
 
-        Acore::UnitLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
+        Ycore::UnitLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         YLA::Push(L, target);
@@ -209,7 +209,7 @@ namespace LuaWorldObject
         GameObject* target = NULL;
         YLAUtil::WorldObjectInRangeCheck checker(true, obj, range, TYPEMASK_GAMEOBJECT, entry, hostile);
 
-        Acore::GameObjectLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
+        Ycore::GameObjectLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         YLA::Push(L, target);
@@ -236,7 +236,7 @@ namespace LuaWorldObject
         Creature* target = NULL;
         YLAUtil::WorldObjectInRangeCheck checker(true, obj, range, TYPEMASK_UNIT, entry, hostile, dead);
 
-        Acore::CreatureLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
+        Ycore::CreatureLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         YLA::Push(L, target);
@@ -261,7 +261,7 @@ namespace LuaWorldObject
         std::list<Player*> list;
         YLAUtil::WorldObjectInRangeCheck checker(false, obj, range, TYPEMASK_PLAYER, 0, hostile, dead);
 
-        Acore::PlayerListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
+        Ycore::PlayerListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         lua_createtable(L, list.size(), 0);
@@ -298,7 +298,7 @@ namespace LuaWorldObject
         std::list<Creature*> list;
         YLAUtil::WorldObjectInRangeCheck checker(false, obj, range, TYPEMASK_UNIT, entry, hostile, dead);
 
-        Acore::CreatureListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
+        Ycore::CreatureListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         lua_createtable(L, list.size(), 0);
@@ -333,7 +333,7 @@ namespace LuaWorldObject
         std::list<GameObject*> list;
         YLAUtil::WorldObjectInRangeCheck checker(false, obj, range, TYPEMASK_GAMEOBJECT, entry, hostile);
 
-        Acore::GameObjectListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
+        Ycore::GameObjectListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         lua_createtable(L, list.size(), 0);
@@ -376,7 +376,7 @@ namespace LuaWorldObject
 
         WorldObject* target = NULL;
 
-        Acore::WorldObjectLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
+        Ycore::WorldObjectLastSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, target, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         YLA::Push(L, target);
@@ -409,7 +409,7 @@ namespace LuaWorldObject
 
         std::list<WorldObject*> list;
 
-        Acore::WorldObjectListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
+        Ycore::WorldObjectListSearcher<YLAUtil::WorldObjectInRangeCheck> searcher(obj, list, checker);
         Cell::VisitObjects(obj, searcher, range);
 
         lua_createtable(L, list.size(), 0);

@@ -1114,8 +1114,8 @@ namespace LuaUnit
 
         std::list<Unit*> list;
 
-        Acore::AnyFriendlyUnitInObjectRangeCheck checker(unit, unit, range);
-        Acore::UnitListSearcher<Acore::AnyFriendlyUnitInObjectRangeCheck> searcher(unit, list, checker);
+        Ycore::AnyFriendlyUnitInObjectRangeCheck checker(unit, unit, range);
+        Ycore::UnitListSearcher<Ycore::AnyFriendlyUnitInObjectRangeCheck> searcher(unit, list, checker);
         Cell::VisitObjects(unit, searcher, range);
 
         YLAUtil::ObjectGUIDCheck guidCheck(unit->GET_GUID());
@@ -1146,8 +1146,8 @@ namespace LuaUnit
         float range = YLA::CHECKVAL<float>(L, 2, SIZE_OF_GRIDS);
 
         std::list<Unit*> list;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck checker(unit, unit, range);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(unit, list, checker);
+        Ycore::AnyUnfriendlyUnitInObjectRangeCheck checker(unit, unit, range);
+        Ycore::UnitListSearcher<Ycore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(unit, list, checker);
         Cell::VisitObjects(unit, searcher, range);
         YLAUtil::ObjectGUIDCheck guidCheck(unit->GET_GUID());
         list.remove_if(guidCheck);

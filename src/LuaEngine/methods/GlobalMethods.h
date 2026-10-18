@@ -91,7 +91,7 @@ namespace LuaGlobalFunctions
             return 1;
         }
         
-        auto intVal = Acore::StringTo<uint32>(val);
+        auto intVal = Ycore::StringTo<uint32>(val);
         if (intVal) {
             YLA::Push(L, *intVal);
             return 1;

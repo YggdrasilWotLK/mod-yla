@@ -17,7 +17,7 @@
 #include "YLAInstanceAI.h"
 #include "lmarshal.h"
 
-#if AC_PLATFORM == AC_PLATFORM_WINDOWS
+#if YC_PLATFORM == YC_PLATFORM_WINDOWS
 #define YLA_WINDOWS
 #endif
 

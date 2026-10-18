@@ -114,7 +114,7 @@ struct LuaScript
 
 inline uint64 YLAMapStateKey(uint32 mapId, uint32 instanceId) { return (static_cast<uint64>(mapId) << 32) | instanceId; }
 
-#define YLA_GAME_API AC_GAME_API
+#define YLA_GAME_API YC_GAME_API
 
 class YLA_GAME_API YLA
 {

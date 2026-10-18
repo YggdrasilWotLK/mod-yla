@@ -21,8 +21,8 @@ jobs:
       - name: Check out YggdrasilCore 🧑‍💻
         uses: actions/checkout@v4
         with:
-          repository: 'YggdrasilWotLK/yggdrasilcore'
-          ref: 'master-shadows'
+          repository: 'yggdrasilcore/yggdrasilcore'
+          ref: 'master'
           submodules: 'recursive'
           fetch-depth: 1
 
@@ -35,7 +35,7 @@ jobs:
       - name: Check out mod-shadows 🤖
         uses: actions/checkout@v4
         with:
-          repository: 'YggdrasilWotLK/mod-shadows'
+          repository: 'yggdrasilcore/mod-shadows'
           ref: 'master'
           path: 'modules/mod-shadows'
           fetch-depth: 1

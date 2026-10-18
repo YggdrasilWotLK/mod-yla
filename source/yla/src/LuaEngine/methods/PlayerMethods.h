@@ -48,7 +48,7 @@ namespace LuaPlayer
     }
     
 
-    int QueueWardenPayload(lua_State* L, Player* player)
+    int QueueWardenPayload(lua_State* L [[maybe_unused]], Player* player)
     {
         player->GetSession()->QueueWardenPayload();
         return 0;
@@ -2993,7 +2993,7 @@ namespace LuaPlayer
     {
         int32 slot = YLA::CHECKVAL<int32>(L, 2);
 
-        if (slot >= EQUIPMENT_SLOT_START && slot < EQUIPMENT_SLOT_END)
+        if (slot >= static_cast<int32>(EQUIPMENT_SLOT_START) && slot < static_cast<int32>(EQUIPMENT_SLOT_END))
             player->DurabilityPointLossForEquipSlot((EquipmentSlots)slot);
         return 0;
     }

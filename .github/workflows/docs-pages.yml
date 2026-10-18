@@ -1,7 +1,7 @@
 name: Docs Pages Sync
 
 # Rebuilds the static YLA API docs from the current method headers on every
-# push to master-shadows and deploys them to GitHub Pages. The `web` branch
+# push to master and deploys them to GitHub Pages. The `web` branch
 # holds the PHP docs site plus a `source/` snapshot (kept in sync by this
 # workflow); built output is deployed as an artifact and never committed.
 #
@@ -13,7 +13,7 @@ name: Docs Pages Sync
 on:
   push:
     branches:
-      - master-shadows
+      - master
   workflow_dispatch:
 
 permissions:
@@ -67,7 +67,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No source changes detected"
           else
-            git commit -m "Sync YLA API source from master-shadows @ ${GITHUB_SHA}"
+            git commit -m "Sync YLA API source from master @ ${GITHUB_SHA}"
             git push origin web
           fi
 

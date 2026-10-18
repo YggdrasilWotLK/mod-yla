@@ -38,9 +38,9 @@ class YLAConfig final : public ConfigValueCache<YLAConfigValues>
         bool IsByteCodeCacheEnabled() const { return GetConfigValue<bool>(YLAConfigValues::BYTECODE_CACHE_ENABLED); }
         bool IsCompatibilityModeEnabled() const { return GetConfigValue<bool>(YLAConfigValues::COMPATIBILITY_MODE); }
 
-        std::string_view GetScriptPath() const { return GetConfigValue(YLAConfigValues::SCRIPT_PATH); }
-        std::string_view GetRequirePath() const { return GetConfigValue(YLAConfigValues::REQUIRE_PATH); }
-        std::string_view GetRequireCPath() const { return GetConfigValue(YLAConfigValues::REQUIRE_CPATH); }
+        std::string GetScriptPath() const { return GetConfigValue(YLAConfigValues::SCRIPT_PATH); }
+        std::string GetRequirePath() const { return GetConfigValue(YLAConfigValues::REQUIRE_PATH); }
+        std::string GetRequireCPath() const { return GetConfigValue(YLAConfigValues::REQUIRE_CPATH); }
 
         uint32 GetAutoReloadInterval() const { return GetConfigValue<uint32>(YLAConfigValues::AUTORELOAD_INTERVAL); }
 

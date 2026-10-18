@@ -541,7 +541,6 @@ VehicleEventBindings(NULL),
 BGEventBindings(NULL),
 BattlefieldEventBindings(NULL),
 AllCreatureEventBindings(NULL),
-UnitEventBindings(NULL),
 
 PacketEventBindings(NULL),
 CreatureEventBindings(NULL),
@@ -556,6 +555,7 @@ InstanceEventBindings(NULL),
 TicketEventBindings(NULL),
 SpellEventBindings(NULL),
 AuraEventBindings(NULL),
+UnitEventBindings(NULL),
 AreaTriggerEventBindings(NULL),
 
 CreatureUniqueBindings(NULL)

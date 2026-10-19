@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="580" viewBox="0 0 940 580" role="img" aria-labelledby="arch-title arch-desc">
+  <title id="arch-title">Yla multistate architecture</title>
+  <desc id="arch-desc">A single world Lua state and one Lua state per map instance share serialized, mutex-guarded caches: the world data cache, the per-instance map box cache, and the per-GUID object data cache.</desc>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1f2937;
+      --muted: #57606a;
+      --world: #2563eb;
+      --map: #16a34a;
+      --cache: #d97706;
+      --line: #8b949e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --fg: #e6edf3;
+        --muted: #8b949e;
+        --world: #58a6ff;
+        --map: #3fb950;
+        --cache: #d29922;
+        --line: #6e7681;
+      }
+    }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .title { fill: var(--fg); font-size: 22px; font-weight: 700; }
+    .box-title { fill: var(--fg); font-size: 15px; font-weight: 700; }
+    .line { fill: var(--muted); font-size: 12.5px; }
+    .note { fill: var(--muted); font-size: 12px; font-style: italic; }
+    .band { fill: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+    .edge { stroke: var(--line); stroke-width: 1.8; fill: none; }
+    rect.world { fill: var(--world); fill-opacity: .08; stroke: var(--world); stroke-width: 2; }
+    rect.map { fill: var(--map); fill-opacity: .08; stroke: var(--map); stroke-width: 2; }
+    rect.cache { fill: var(--cache); fill-opacity: .08; stroke: var(--cache); stroke-width: 2; }
+  </style>
+
+  <defs>
+    <marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="580" fill="var(--bg)"/>
+
+  <text class="title" x="470" y="38" text-anchor="middle">Yla multistate architecture</text>
+
+  <rect class="world" x="330" y="60" width="280" height="76" rx="12"/>
+  <text class="box-title" x="470" y="90" text-anchor="middle">World Lua state</text>
+  <text class="line" x="470" y="110" text-anchor="middle">single global state · GYLA</text>
+  <text class="line" x="470" y="126" text-anchor="middle">SetWorldData() · group methods</text>
+
+  <text class="band" x="40" y="162" text-anchor="start">Shared caches — serialized, mutex-guarded</text>
+
+  <rect class="cache" x="40" y="220" width="270" height="110" rx="12"/>
+  <text class="box-title" x="175" y="250" text-anchor="middle">World Data Cache</text>
+  <text class="line" x="175" y="274" text-anchor="middle">key → serialized value</text>
+  <text class="line" x="175" y="294" text-anchor="middle">written by world state only</text>
+  <text class="line" x="175" y="314" text-anchor="middle">readable from every state</text>
+
+  <rect class="cache" x="335" y="220" width="270" height="110" rx="12"/>
+  <text class="box-title" x="470" y="250" text-anchor="middle">Map Box Cache</text>
+  <text class="line" x="470" y="274" text-anchor="middle">keyed by map + instance</text>
+  <text class="line" x="470" y="294" text-anchor="middle">owner map state writes</text>
+  <text class="line" x="470" y="314" text-anchor="middle">everyone reads last value</text>
+
+  <rect class="cache" x="630" y="220" width="270" height="110" rx="12"/>
+  <text class="box-title" x="765" y="250" text-anchor="middle">Object Data Cache</text>
+  <text class="line" x="765" y="274" text-anchor="middle">keyed by object GUID</text>
+  <text class="line" x="765" y="294" text-anchor="middle">obj:Data() · GetMapData()</text>
+  <text class="line" x="765" y="314" text-anchor="middle">cleared on object destroy</text>
+
+  <path class="edge" d="M470,136 L470,180"/>
+  <path class="edge" d="M175,180 L765,180"/>
+  <path class="edge" marker-end="url(#head)" d="M175,180 L175,220"/>
+  <path class="edge" marker-end="url(#head)" d="M470,180 L470,220"/>
+  <path class="edge" marker-end="url(#head)" d="M765,180 L765,220"/>
+
+  <rect class="map" x="90" y="410" width="300" height="98" rx="12"/>
+  <text class="box-title" x="240" y="440" text-anchor="middle">Map Lua state — map A</text>
+  <text class="line" x="240" y="462" text-anchor="middle">one state + thread per map instance</text>
+  <text class="line" x="240" y="482" text-anchor="middle">GetWorldData() · SetMapData() · player:Data()</text>
+
+  <rect class="map" x="550" y="410" width="300" height="98" rx="12"/>
+  <text class="box-title" x="700" y="440" text-anchor="middle">Map Lua state — map B</text>
+  <text class="line" x="700" y="462" text-anchor="middle">one state + thread per map instance</text>
+  <text class="line" x="700" y="482" text-anchor="middle">GetWorldData() · SetMapData() · player:Data()</text>
+
+  <path class="edge" marker-start="url(#head)" marker-end="url(#head)" d="M240,330 L240,410"/>
+  <path class="edge" marker-start="url(#head)" marker-end="url(#head)" d="M700,330 L700,410"/>
+
+  <text class="note" x="470" y="548" text-anchor="middle">The world state can also run most object-mutating methods directly on map objects (see dissemination flow 4).</text>
+</svg>

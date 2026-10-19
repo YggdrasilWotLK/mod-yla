@@ -18,6 +18,38 @@ Yla has diverged from mod-ale and from the original Eluna project. Its API, stat
 
 If you need stock ALE or Eluna compatibility, use the upstream projects instead: [mod-ale](https://github.com/azerothcore/mod-ale) for AzerothCore's ALE or [ElunaTrinityWotlk](https://github.com/ElunaLuaEngine/ElunaTrinityWotlk) for the original Eluna API.
 
+## Project Design
+
+### Multistate implementation
+
+![Yla multistate architecture](.github/images/multistate-architecture.svg)
+
+1. Multistate is modelled after upstream ElunaLuaEngine.
+2. Custom additions facilitate true cross-state (and cross-thread) communication, including `RunCommand` cross-map teleports deferred to the world state (when maps sleep).
+3. Serialized `SetWorldData`/`GetWorldData` and `SetMapData`/`GetMapData` make information dissemination possible between states. Each data key can only be written to from its native state.
+4. State validation of all objects (i.e., an object on a map other than the state map throws a Lua error, a custom addition for thread safety), and state filtering on methods (i.e., group methods can only run on the world state, like upstream).
+
+### Multistate scripting models
+
+#### Map event fetching static content from the database
+
+1. The world state fetches database content and stores it as `SetWorldData`.
+2. When map events trigger (change map, talk to creature, etc.), the map can query `GetWorldData` and populate a cache of its own from a recursive mutex read on the world data, thereby requiring minimal database operations and minimal cross-state communication.
+
+#### Map-based actor that should have world-available information
+
+1. As upstream, object-specific `Data()` is available here. It is cleared on object destruction (i.e., player logout for example).
+2. Note, however, that the `Data()` is serialized in the Lua engine, and is not accessible to the underlying C++ core, unlike ElunaLuaEngine.
+
+### Information and event dissemination flow
+
+![Yla information and event dissemination flow](.github/images/multistate-dissemination.svg)
+
+- **World info → maps:** `SetWorldData()` in the world state, `GetWorldData()` in map states. Use it to establish per-map caches from world data; re-read sparingly due to mutexing.
+- **Map info → other maps / world:** `player:Data()` or `GetMapData`.
+- **Map event → world event:** bridge through `player:RunCommand`, which defers the object context to when maps sleep.
+- **World event → map event:** bridging generally not required, most methods that mutate map objects can be safely run in the world state. If not sufficient, consider EMQ or `CreateLuaEvent` polling data between maps using `GetMapData`/`GetWorldData`.
+
 ## Installation
 
 ### Prerequisites

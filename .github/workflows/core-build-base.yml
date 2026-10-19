@@ -7,6 +7,10 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: "mod-yla-${{ github.ref }}"
   cancel-in-progress: true
@@ -18,7 +22,27 @@ jobs:
       CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime
       CCACHE_CPP2: "true"
     steps:
+      - name: Detect source changes
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          files=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            files=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.number }}/files" --paginate --jq '.[].filename')
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            files=$(gh api "repos/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}" --jq '.files[].filename' || true)
+          fi
+          if [ -z "$files" ] || printf '%s\n' "$files" | grep -qiE '\.(c|cc|cpp|cxx|h|hh|hpp|sql)$|(^|/)CMakeLists\.txt$|\.cmake$'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "No source changes; skipping build."
+          fi
+
       - name: Check out YggdrasilCore 🧑‍💻
+        if: steps.changes.outputs.code == 'true'
         uses: actions/checkout@v4
         with:
           repository: 'yggdrasilcore/yggdrasilcore'
@@ -27,12 +51,14 @@ jobs:
           fetch-depth: 1
 
       - name: Check out module repository 📂
+        if: steps.changes.outputs.code == 'true'
         uses: actions/checkout@v4
         with:
           path: 'modules/${{ github.event.repository.name }}'
           fetch-depth: 1
 
       - name: Check out mod-shadows 🤖
+        if: steps.changes.outputs.code == 'true'
         uses: actions/checkout@v4
         with:
           repository: 'yggdrasilcore/mod-shadows'
@@ -41,6 +67,7 @@ jobs:
           fetch-depth: 1
 
       - name: Ccache 💾
+        if: steps.changes.outputs.code == 'true'
         uses: hendrikmuhs/ccache-action@v1
         with:
           key: mod-yla-clang-18-${{ inputs.lua_version }}-${{ github.ref_name }}
@@ -50,6 +77,7 @@ jobs:
           max-size: 1000M
 
       - name: Install build dependencies 🧰
+        if: steps.changes.outputs.code == 'true'
         shell: bash
         run: |
           sudo apt-get update
@@ -59,6 +87,7 @@ jobs:
             libreadline6-dev libssl-dev libtool openssl zlib1g-dev
 
       - name: Build mod-yla with ${{ inputs.lua_version }} 🏗️
+        if: steps.changes.outputs.code == 'true'
         run: |
           cmake -G Ninja -B build -S . \
             -DCMAKE_C_COMPILER=clang-18 \
@@ -75,6 +104,7 @@ jobs:
           cmake --build build --parallel $(nproc)
 
       - name: Run Cppcheck for static code analysis 🔍
+        if: steps.changes.outputs.code == 'true'
         run: |
           cd modules/${{ github.event.repository.name }}
           cppcheck -j$(nproc) --force --inline-suppr \

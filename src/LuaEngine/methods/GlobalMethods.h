@@ -380,7 +380,7 @@ namespace LuaGlobalFunctions
     int GetItemGUID(lua_State* L)
     {
         uint64 lowguid = YLA::CHECKVAL<uint64>(L, 1);
-        YLA::Push(L, ObjectGuid(HIGHGUID_ITEM, lowguid));
+        YLA::Push(L, ObjectGuid(HIGHGUID_ITEM, ObjectGuid::LowType(lowguid)));
         return 1;
     }
 

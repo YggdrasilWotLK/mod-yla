@@ -374,13 +374,13 @@ namespace LuaGlobalFunctions
      * [Item] GUID consist of low GUID and type ID
      * [Player] and [Item] for example can have the same low GUID but not GUID.
      *
-     * @param uint32 lowguid : low GUID of the [Item]
+     * @param uint64 lowguid : low GUID of the [Item]
      * @return ObjectGuid guid
      */
     int GetItemGUID(lua_State* L)
     {
-        uint32 lowguid = YLA::CHECKVAL<uint32>(L, 1);
-        YLA::Push(L, MAKE_NEW_GUID(lowguid, 0, HIGHGUID_ITEM));
+        uint64 lowguid = YLA::CHECKVAL<uint64>(L, 1);
+        YLA::Push(L, ObjectGuid(HIGHGUID_ITEM, ObjectGuid::LowType(lowguid)));
         return 1;
     }
 

@@ -7,16 +7,21 @@
 #ifndef _YLA_DEFER_H
 #define _YLA_DEFER_H
 
+#include "Chat.h"
 #include "MapMgr.h"
 #include "ObjectAccessor.h"
 #include "ObjectGuid.h"
 #include "Player.h"
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
-// Far teleports and logouts from Lua run in OnWorldUpdate (maps idle).
-// Running them inline would unlink the player from a map mid-iteration.
-// Same-map teleports only relocate and stay inline.
+// Far teleports, logouts and map-state commands from Lua run in
+// OnWorldUpdate (maps idle). Running them inline would unlink the player
+// from a map mid-iteration, and command dispatch would re-enter hooks
+// (global -> state) under a held state lock. Same-map teleports only
+// relocate and stay inline.
 class YlaDefer
 {
 public:
@@ -52,14 +57,28 @@ public:
         Logouts().push_back({ player->GetGUID(), save });
     }
 
+    // Commands issued from a map state are queued: dispatching them inline
+    // would re-enter hook dispatch (global -> state) under this state's
+    // lock. They run on the world thread's next tick, FIFO. World-state
+    // callers already hold the right locks and run inline (see Player:RunCommand).
+    static void RunCommand(Player* player, std::string command)
+    {
+        if (!player)
+            return;
+        std::lock_guard<std::mutex> guard(Mutex());
+        Commands().push_back({ player->GetGUID(), std::move(command) });
+    }
+
     static void Drain()
     {
         std::vector<TeleportOp> teleports;
         std::vector<LogoutOp> logouts;
+        std::vector<CommandOp> commands;
         {
             std::lock_guard<std::mutex> guard(Mutex());
             teleports.swap(Teleports());
             logouts.swap(Logouts());
+            commands.swap(Commands());
         }
         for (TeleportOp const& op : teleports)
         {
@@ -80,6 +99,13 @@ public:
                 continue;
             player->GetSession()->LogoutPlayer(op.save);
         }
+        for (CommandOp const& op : commands)
+        {
+            Player* player = ObjectAccessor::FindPlayer(op.playerGuid);
+            if (!player || !player->GetSession())
+                continue;
+            ChatHandler(player->GetSession())._ParseCommands(op.command);
+        }
     }
 
 private:
@@ -93,6 +119,11 @@ private:
     {
         ObjectGuid playerGuid;
         bool save = true;
+    };
+    struct CommandOp
+    {
+        ObjectGuid playerGuid;
+        std::string command;
     };
 
     static std::mutex& Mutex()
@@ -108,6 +139,11 @@ private:
     static std::vector<LogoutOp>& Logouts()
     {
         static std::vector<LogoutOp> queue;
+        return queue;
+    }
+    static std::vector<CommandOp>& Commands()
+    {
+        static std::vector<CommandOp> queue;
         return queue;
     }
 };

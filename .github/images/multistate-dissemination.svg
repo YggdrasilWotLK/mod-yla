@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="flow-title flow-desc">
+  <title id="flow-title">Yla information and event dissemination flow</title>
+  <desc id="flow-desc">Four flows between the world state and map states: world info to maps via SetWorldData and GetWorldData; map info to other maps or the world via player Data or GetMapData; map events to world events bridged through player RunCommand, deferred until maps sleep; and world events to map events, which usually need no bridge.</desc>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1f2937;
+      --muted: #57606a;
+      --world: #2563eb;
+      --map: #16a34a;
+      --line: #8b949e;
+      --badge: #d97706;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --fg: #e6edf3;
+        --muted: #8b949e;
+        --world: #58a6ff;
+        --map: #3fb950;
+        --line: #6e7681;
+        --badge: #d29922;
+      }
+    }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .title { fill: var(--fg); font-size: 22px; font-weight: 700; }
+    .box-title { fill: var(--fg); font-size: 16px; font-weight: 700; }
+    .line { fill: var(--muted); font-size: 12.5px; }
+    .edge { stroke: var(--line); stroke-width: 1.8; fill: none; }
+    rect.world { fill: var(--world); fill-opacity: .08; stroke: var(--world); stroke-width: 2; }
+    rect.map { fill: var(--map); fill-opacity: .08; stroke: var(--map); stroke-width: 2; }
+    .label { fill: var(--fg); font-size: 14px; font-weight: 600; }
+    .detail { fill: var(--muted); font-size: 12px; }
+    .badge { fill: var(--badge); }
+    .badge-t { fill: #ffffff; font-size: 13px; font-weight: 700; }
+  </style>
+
+  <defs>
+    <marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="520" fill="var(--bg)"/>
+
+  <text class="title" x="480" y="40" text-anchor="middle">Information and event dissemination</text>
+
+  <rect class="world" x="50" y="120" width="250" height="310" rx="14"/>
+  <text class="box-title" x="175" y="265" text-anchor="middle">World Lua state</text>
+  <text class="line" x="175" y="291" text-anchor="middle">global state</text>
+  <text class="line" x="175" y="313" text-anchor="middle">owns world data</text>
+
+  <rect class="map" x="660" y="120" width="250" height="310" rx="14"/>
+  <text class="box-title" x="785" y="265" text-anchor="middle">Map Lua states</text>
+  <text class="line" x="785" y="291" text-anchor="middle">one per map instance</text>
+  <text class="line" x="785" y="313" text-anchor="middle">owns map + object data</text>
+
+  <path class="edge" marker-end="url(#head)" d="M300,170 L660,170"/>
+  <circle class="badge" cx="330" cy="170" r="13"/>
+  <text class="badge-t" x="330" y="175" text-anchor="middle">1</text>
+  <text class="label" x="480" y="158" text-anchor="middle">World info → maps</text>
+  <text class="detail" x="480" y="190" text-anchor="middle">SetWorldData() → GetWorldData() (cache per map)</text>
+
+  <path class="edge" marker-end="url(#head)" d="M660,240 L300,240"/>
+  <circle class="badge" cx="630" cy="240" r="13"/>
+  <text class="badge-t" x="630" y="245" text-anchor="middle">2</text>
+  <text class="label" x="480" y="228" text-anchor="middle">Map info → other maps / world</text>
+  <text class="detail" x="480" y="260" text-anchor="middle">player:Data() or GetMapData()</text>
+
+  <path class="edge" marker-end="url(#head)" d="M660,310 L300,310"/>
+  <circle class="badge" cx="630" cy="310" r="13"/>
+  <text class="badge-t" x="630" y="315" text-anchor="middle">3</text>
+  <text class="label" x="480" y="298" text-anchor="middle">Map event → world event</text>
+  <text class="detail" x="480" y="330" text-anchor="middle">player:RunCommand, deferred until maps sleep</text>
+
+  <path class="edge" marker-end="url(#head)" d="M300,380 L660,380"/>
+  <circle class="badge" cx="330" cy="380" r="13"/>
+  <text class="badge-t" x="330" y="385" text-anchor="middle">4</text>
+  <text class="label" x="480" y="368" text-anchor="middle">World → map event</text>
+  <text class="detail" x="480" y="400" text-anchor="middle">usually unneeded; else EMQ or CreateLuaEvent polling</text>
+
+  <text class="detail" x="480" y="480" text-anchor="middle">Direct paths first; flow 4 is the fallback when a direct world-state mutation cannot cover the case.</text>
+</svg>

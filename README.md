@@ -25,7 +25,7 @@ If you need stock ALE or Eluna compatibility, use the upstream projects instead:
 ![Yla multistate architecture](.github/images/multistate-architecture.svg)
 
 1. Multistate is modelled after upstream ElunaLuaEngine.
-2. Custom additions facilitate true cross-state (and cross-thread) communication, including `RunCommand` cross-map teleports deferred to the world state (when maps sleep).
+2. Custom additions facilitate true cross-state (and cross-thread) communication, including `RunCommand` and cross-map teleports deferred to the world state (when maps sleep).
 3. Serialized `SetWorldData`/`GetWorldData` and `SetMapData`/`GetMapData` make information dissemination possible between states. Each data key can only be written to from its native state.
 4. State validation of all objects (i.e., an object on a map other than the state map throws a Lua error, a custom addition for thread safety), and state filtering on methods (i.e., group methods can only run on the world state, like upstream).
 

@@ -1689,7 +1689,7 @@ namespace LuaGlobalFunctions
             {
                 YLAQuery* eq = result ? new YLAQuery(result) : nullptr;
 
-                LOCK_YLA;
+                YLA::Guard globalGuard((owner.global || YLAConfig::GetInstance().IsCompatibilityModeEnabled()) ? YLA::GetLock() : YLA::GetNoopLock());
                 auto state = YLA::LockStateRef(owner);
                 if (!state)
                 {
@@ -1705,8 +1705,7 @@ namespace LuaGlobalFunctions
                     delete eq;
                     return;
                 }
-                // Global -> state order (LOCK_YLA held, state taken here);
-                // the world drain holds the same nesting, never the reverse.
+                // Map states take only their own lock in multistate mode.
                 YLA::Guard stateGuard(state->GetStateLock());
                 if (state->luaGen.load(std::memory_order_acquire) != gen || !state->HasLuaState())
                 {

@@ -137,13 +137,27 @@ void YLA::OnGameEventStop(uint32 eventid)
 
 void YLA::OnLuaStateClose()
 {
-    START_HOOK_WORLD(YLA_EVENT_ON_LUA_STATE_CLOSE);
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
+        return;
+    LOCK_YLA_STATE;
+    if (!YLA::IsInitialized())
+        return;
+    auto key = EventKey<ServerEvents>(YLA_EVENT_ON_LUA_STATE_CLOSE);
+    if (!ServerEventBindings || !ServerEventBindings->HasBindingsFor(key))
+        return;
     CallAllFunctions(ServerEventBindings, key);
 }
 
 void YLA::OnLuaStateOpen()
 {
-    START_HOOK_WORLD(YLA_EVENT_ON_LUA_STATE_OPEN);
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
+        return;
+    LOCK_YLA_STATE;
+    if (!YLA::IsInitialized())
+        return;
+    auto key = EventKey<ServerEvents>(YLA_EVENT_ON_LUA_STATE_OPEN);
+    if (!ServerEventBindings || !ServerEventBindings->HasBindingsFor(key))
+        return;
     CallAllFunctions(ServerEventBindings, key);
 }
 
@@ -290,11 +304,8 @@ void YLA::OnShutdownCancel()
 // WORLD
 void YLA::OnWorldUpdate(uint32 diff)
 {
-    {
-        LOCK_YLA;
-        if (ShouldReload())
-            _ReloadYLA();
-    }
+    if (ShouldReload())
+        _ReloadYLA();
 
     // Deferred far teleports/logouts (maps idle here). Deliberately without
     // LOCK_YLA: the queue has its own mutex, and holding global across the
@@ -311,9 +322,8 @@ void YLA::OnWorldUpdate(uint32 diff)
     }
 
     {
-        // Copy owning references and release g_states before touching
-        // callbacks: callbacks take global -> state, so holding g_states
-        // shared across them would invert the order (g_states -> global).
+        // Copy owning references and release g_states before callbacks:
+        // Lua may re-enter g_states (LockStateRef, map creation).
         std::vector<std::shared_ptr<YLA>> states;
         {
             std::shared_lock lock(g_states_mutex);
@@ -323,7 +333,6 @@ void YLA::OnWorldUpdate(uint32 diff)
         }
         for (auto& state : states)
         {
-            LOCK_YLA;
             Guard stateGuard(state->GetStateLock());
             std::lock_guard<std::recursive_mutex> qguard(state->queryMutex);
             state->httpManager.HandleHttpResponses(state.get(), false);

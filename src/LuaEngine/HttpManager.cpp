@@ -349,11 +349,8 @@ void HttpManager::HandleHttpResponses(YLA* owner, bool isGlobal)
             continue;
         }
 
-        LOCK_YLA;
-        // The callback runs on the state that issued the request, under
-        // global -> state order (this drain holds the same nesting).
-        // Stale generations (reload recycled the registry while the
-        // worker was in flight) are dropped, never unref'd on the new one.
+        YLA::Guard globalGuard((isGlobal || YLAConfig::GetInstance().IsCompatibilityModeEnabled()) ? YLA::GetLock() : YLA::GetNoopLock());
+        // Requests from before a reload are dropped, never unref'd on the new registry.
         auto state = YLA::LockStateRef(res->owner);
         if (!state || state.get() != owner || state->luaGen.load(std::memory_order_acquire) != res->gen || !state->HasLuaState())
         {
@@ -367,7 +364,6 @@ void HttpManager::HandleHttpResponses(YLA* owner, bool isGlobal)
             delete res;
             continue;
         }
-        (void)isGlobal;
         lua_State* L = state->L;
 
         // Get function

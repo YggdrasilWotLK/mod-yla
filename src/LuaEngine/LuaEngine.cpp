@@ -225,27 +225,29 @@ std::shared_ptr<YLA> YLA::CreateMapState(uint32 mapId, uint32 instanceId)
 
     // Strict global -> g_states -> state nesting, matching Uninitialize
     // and _ReloadYLA, so no path ever takes global while holding a state.
-    LOCK_YLA;
-    uint64 key = YLAMapStateKey(mapId, instanceId);
-    uint64 seq = ++s_stateSeq;
-    YlaStateRef ref{ false, mapId, instanceId, seq };
     std::shared_ptr<YLA> state;
     {
-        std::unique_lock lock(g_states_mutex);
-        ASSERT(g_states.find(key) == g_states.end());
-        state = std::shared_ptr<YLA>(new YLA(ref, mapId, instanceId));
-        g_states[key] = state;
-    }
-
-    // During startup, defer the ~250 ms script load: queue it for the bounded
-    // parallel join in OnBeforeWorldInitialized so map creation stays cheap
-    // and loads overlap. Runtime creation stays synchronous.
-    {
-        std::lock_guard<std::mutex> slock(s_startupMutex);
-        if (s_startupPhase)
+        LOCK_YLA;
+        uint64 key = YLAMapStateKey(mapId, instanceId);
+        uint64 seq = ++s_stateSeq;
+        YlaStateRef ref{ false, mapId, instanceId, seq };
         {
-            s_startupPending.push_back(state);
-            return state;
+            std::unique_lock lock(g_states_mutex);
+            ASSERT(g_states.find(key) == g_states.end());
+            state = std::shared_ptr<YLA>(new YLA(ref, mapId, instanceId));
+            g_states[key] = state;
+        }
+
+        // During startup, defer the ~250 ms script load: queue it for the bounded
+        // parallel join in OnBeforeWorldInitialized so map creation stays cheap
+        // and loads overlap. Runtime creation stays synchronous.
+        {
+            std::lock_guard<std::mutex> slock(s_startupMutex);
+            if (s_startupPhase)
+            {
+                s_startupPending.push_back(state);
+                return state;
+            }
         }
     }
 
@@ -430,6 +432,8 @@ void YLA::_ReloadYLA()
         sYLA->RunScriptsLocked();
     }
 
+    reloadGuard.unlock();
+
     // Snapshot, then work per state without the map lock: holding it
     // across close/open/run starves create/destroy (and workers below).
     std::vector<std::shared_ptr<YLA>> states;
@@ -440,16 +444,14 @@ void YLA::_ReloadYLA()
                 states.push_back(state);
     }
 
-    // Close hooks stay sequential: they run Lua under global->state.
+    // Close hooks stay sequential. The hook takes its own state lock.
     for (auto& state : states)
     {
         Guard stateGuard(state->GetStateLock());
         state->OnLuaStateClose();
     }
 
-    // Workers take only their own state (+ cache locks). The global lock
-    // is released for the join so no worker can block on it, ever.
-    reloadGuard.unlock();
+    // Workers take only their own state (+ cache locks).
     {
         unsigned maxWorkers = std::thread::hardware_concurrency();
         if (maxWorkers < 2u)
@@ -471,7 +473,6 @@ void YLA::_ReloadYLA()
     // Open hooks stay sequential, same nesting as a normal load.
     for (auto& state : states)
     {
-        LOCK_YLA;
         Guard stateGuard(state->GetStateLock());
         state->OnLuaStateOpen();
     }

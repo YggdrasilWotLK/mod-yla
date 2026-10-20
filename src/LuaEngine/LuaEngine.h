@@ -122,12 +122,9 @@ public:
     void IncrementCallbacks() { pendingCallbacks++; }
     void DecrementCallbacks()
     {
-        pendingCallbacks--;
-        if (pendingCallbacks == 0 && reloadScheduled)
-        {
-            LOCK_YLA;
-            _ReloadYLA();
-        }
+        if (pendingCallbacks.fetch_sub(1, std::memory_order_acq_rel) == 1 &&
+            reloadScheduled.load(std::memory_order_acquire))
+            reload.store(true, std::memory_order_release);
     }
     bool CanReload() const { return pendingCallbacks == 0; }
     typedef std::list<LuaScript> ScriptList;

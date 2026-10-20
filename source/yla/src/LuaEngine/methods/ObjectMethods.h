@@ -193,7 +193,7 @@ namespace LuaObject
      */
     int GetGUIDLow(lua_State* L, Object* obj)
     {
-        YLA::Push(L, obj->GetGUID().GetCounter());
+        lua_pushnumber(L, static_cast<lua_Number>(obj->GetGUID().GetCounter()));
         return 1;
     }
 

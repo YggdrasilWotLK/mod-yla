@@ -4003,6 +4003,17 @@ namespace LuaPlayer
             command = command.substr(1);
         }
 
+        // Map-state callers must not dispatch inline: _ParseCommands re-enters
+        // hook dispatch (global -> state) under this state's lock. Queue for
+        // the world-thread drain instead. World-state callers already hold the
+        // right locks, so dispatch inline.
+        YLA* callingE = YLA::GetYLA(L);
+        if (callingE->GetStateMapId() != YLA_GLOBAL_STATE)
+        {
+            YlaDefer::RunCommand(player, std::move(command));
+            return 0;
+        }
+
         auto handler = ChatHandler(player->GetSession());
         handler._ParseCommands(command);
 

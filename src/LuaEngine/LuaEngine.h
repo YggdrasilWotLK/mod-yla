@@ -231,6 +231,9 @@ private:
     static std::string lua_requirepath;
     static std::string lua_requirecpath;
 
+    static std::shared_ptr<const ScriptList> s_scriptSnapshot;
+    static std::shared_mutex s_scriptsMutex;
+
     // Per-map+instance states, shared-owned so timer/DB/HTTP holders and
     // script-side users keep a state alive across concurrent destroy.
     static std::map<uint64, std::shared_ptr<YLA>> g_states;

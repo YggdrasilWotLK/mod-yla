@@ -137,13 +137,27 @@ void YLA::OnGameEventStop(uint32 eventid)
 
 void YLA::OnLuaStateClose()
 {
-    START_HOOK_WORLD(YLA_EVENT_ON_LUA_STATE_CLOSE);
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
+        return;
+    LOCK_YLA_STATE;
+    if (!YLA::IsInitialized())
+        return;
+    auto key = EventKey<ServerEvents>(YLA_EVENT_ON_LUA_STATE_CLOSE);
+    if (!ServerEventBindings || !ServerEventBindings->HasBindingsFor(key))
+        return;
     CallAllFunctions(ServerEventBindings, key);
 }
 
 void YLA::OnLuaStateOpen()
 {
-    START_HOOK_WORLD(YLA_EVENT_ON_LUA_STATE_OPEN);
+    if (!YLAConfig::GetInstance().IsYLAEnabled())
+        return;
+    LOCK_YLA_STATE;
+    if (!YLA::IsInitialized())
+        return;
+    auto key = EventKey<ServerEvents>(YLA_EVENT_ON_LUA_STATE_OPEN);
+    if (!ServerEventBindings || !ServerEventBindings->HasBindingsFor(key))
+        return;
     CallAllFunctions(ServerEventBindings, key);
 }
 

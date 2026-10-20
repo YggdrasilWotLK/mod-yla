@@ -46,6 +46,8 @@ extern "C"
 
 YLA::ScriptList YLA::lua_scripts;
 YLA::ScriptList YLA::lua_extensions;
+std::shared_ptr<const YLA::ScriptList> YLA::s_scriptSnapshot;
+std::shared_mutex YLA::s_scriptsMutex;
 std::string YLA::lua_folderpath;
 std::string YLA::lua_requirepath;
 std::string YLA::lua_requirecpath;
@@ -182,8 +184,12 @@ void YLA::Uninitialize()
         s_startupPending.clear();
     }
 
-    lua_scripts.clear();
-    lua_extensions.clear();
+    {
+        std::unique_lock<std::shared_mutex> scriptsLock(s_scriptsMutex);
+        lua_scripts.clear();
+        lua_extensions.clear();
+        s_scriptSnapshot.reset();
+    }
 
     ClearGlobalCache();
 }
@@ -336,10 +342,14 @@ void YLA::RunPendingStartupMapLoads()
 
 void YLA::LoadScriptPaths()
 {
+    std::unique_lock<std::shared_mutex> scriptsLock(s_scriptsMutex);
+
     uint32 oldMSTime = YLAUtil::GetCurrTime();
 
     lua_scripts.clear();
     lua_extensions.clear();
+
+    ClearTimestampCache();
 
     lua_folderpath = YLAConfig::GetInstance().GetScriptPath();
     const std::string& lua_path_extra = static_cast<std::string>(YLAConfig::GetInstance().GetRequirePath());
@@ -371,6 +381,20 @@ void YLA::LoadScriptPaths()
 
     if (!lua_requirecpath.empty())
         lua_requirecpath.erase(lua_requirecpath.end() - 1);
+
+    ScriptList sortedExtensions = lua_extensions;
+    ScriptList sortedScripts = lua_scripts;
+    auto byPath = [](const LuaScript& first, const LuaScript& second)
+    {
+        return first.filepath < second.filepath;
+    };
+    sortedExtensions.sort(byPath);
+    sortedScripts.sort(byPath);
+
+    auto snapshot = std::make_shared<ScriptList>();
+    snapshot->insert(snapshot->end(), sortedExtensions.begin(), sortedExtensions.end());
+    snapshot->insert(snapshot->end(), sortedScripts.begin(), sortedScripts.end());
+    s_scriptSnapshot = std::move(snapshot);
 
     YLA_LOG_DEBUG("[YLA]: Loaded {} scripts in {} ms", lua_scripts.size() + lua_extensions.size(), YLAUtil::GetTimeDiff(oldMSTime));
 }
@@ -1033,11 +1057,6 @@ void YLA::GetScripts(std::string path, uint32 mapId)
     }
 }
 
-static bool ScriptPathComparator(const LuaScript& first, const LuaScript& second)
-{
-    return first.filepath < second.filepath;
-}
-
 void YLA::RunScripts()
 {
     LOCK_YLA;
@@ -1056,18 +1075,13 @@ void YLA::RunScriptsLocked(bool fireOpenEvent)
     uint32 precompiledCount = 0;
     bool cacheEnabled = eConfigMgr->GetOption<bool>("YLA.BytecodeCache", true);
 
-    if (cacheEnabled)
-        ClearTimestampCache();
-
-    // Local copies: the shared lists must not be sorted in place while
-    // other states load theirs on worker threads.
-    ScriptList extensions = lua_extensions;
-    ScriptList all = lua_scripts;
-    extensions.sort(ScriptPathComparator);
-    all.sort(ScriptPathComparator);
-    ScriptList scripts;
-    scripts.insert(scripts.end(), extensions.begin(), extensions.end());
-    scripts.insert(scripts.end(), all.begin(), all.end());
+    std::shared_ptr<const ScriptList> scripts;
+    {
+        std::shared_lock<std::shared_mutex> scriptsLock(s_scriptsMutex);
+        scripts = s_scriptSnapshot;
+    }
+    if (!scripts)
+        return;
 
     std::unordered_map<std::string, std::string> loaded; // filename, path
 
@@ -1076,7 +1090,7 @@ void YLA::RunScriptsLocked(bool fireOpenEvent)
     luaL_getsubtable(L, -1, "loaded");
     // Stack: package, modules
     int modules = lua_gettop(L);
-    for (ScriptList::iterator it = scripts.begin(); it != scripts.end(); ++it)
+    for (ScriptList::const_iterator it = scripts->begin(); it != scripts->end(); ++it)
     {
         // Filter by map-prefixed subdirectory (e.g. lua_scripts/0/, lua_scripts/1_...)
         std::string folderName = boost::filesystem::path(it->modulepath).filename().generic_string();

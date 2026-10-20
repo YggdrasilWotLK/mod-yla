@@ -458,7 +458,7 @@ namespace LuaGlobalFunctions
     {
         ObjectGuid guid = YLA::CHECKVAL<ObjectGuid>(L, 1);
 
-        YLA::Push(L, guid.GetCounter());
+        lua_pushnumber(L, static_cast<lua_Number>(guid.GetCounter()));
         return 1;
     }
 

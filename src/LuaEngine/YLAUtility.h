@@ -37,8 +37,24 @@ typedef QueryResult YLAQuery;
 #define YLA_LOG_ERROR(...)    LOG_ERROR("YLA", __VA_ARGS__);
 #define YLA_LOG_DEBUG(...)    LOG_DEBUG("YLA", __VA_ARGS__);
 
+inline bool GuidTypeHasEntry(HighGuid high)
+{
+    // GetMaxCounter() is public on every supported core revision (HasEntry() is
+    // private before the core GUID truncation fix) and returns 0x00FFFFFF only
+    // for high GUID types that pack an entry into bits 24..47.
+    static constexpr ObjectGuid::LowType entryCounterMax = 0x00FFFFFF;
+    return ObjectGuid::GetMaxCounter(high) == entryCounterMax;
+}
+
+inline ObjectGuid MakeNewGuid(ObjectGuid::LowType low, uint32 entry, HighGuid high)
+{
+    // Only entry-bearing types pack the entry into bits 24..47 and therefore
+    // limit the counter to 24 bits. Players/items keep the full counter.
+    return GuidTypeHasEntry(high) ? ObjectGuid(high, entry, low) : ObjectGuid(high, low);
+}
+
 #ifndef MAKE_NEW_GUID
-#define MAKE_NEW_GUID(l, e, h)  ObjectGuid(h, e, l)
+#define MAKE_NEW_GUID(l, e, h)  MakeNewGuid(l, e, h)
 #endif
 #ifndef GUID_ENPART
 #define GUID_ENPART(guid)       ObjectGuid(guid).GetEntry()

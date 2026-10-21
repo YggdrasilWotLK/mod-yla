@@ -25,7 +25,7 @@ namespace LuaRoll
      */
     int GetItemGUID(lua_State* L, Roll* roll)
     {
-        YLA::Push(L, roll->itemGUID.GetCounter());
+        lua_pushnumber(L, static_cast<lua_Number>(roll->itemGUID.GetCounter()));
         return 1;
     }
 

@@ -255,7 +255,7 @@ namespace LuaGameObject
                 item->SaveToDB(trans);
                 LootStoreItem storeItem(item->GetEntry(), 0, 100, 0, LOOT_MODE_DEFAULT, 0, item->GetCount(), item->GetCount());
                 go->loot.AddItem(storeItem);
-                YLA::Push(L, item->GetGUID().GetCounter());
+                lua_pushnumber(L, static_cast<lua_Number>(item->GetGUID().GetCounter()));
                 ++addedItems;
             }
         }

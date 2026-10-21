@@ -997,7 +997,7 @@ namespace LuaGlobalFunctions
             lua_newtable(L);
             int row = lua_gettop(L);
             lua_pushstring(L, "guidLow");
-            YLA::Push(L, entry.Guid.GetCounter());
+            lua_pushnumber(L, static_cast<lua_Number>(entry.Guid.GetCounter()));
             lua_settable(L, row);
             lua_pushstring(L, "name");
             YLA::Push(L, entry.Name);
@@ -1021,7 +1021,7 @@ namespace LuaGlobalFunctions
             YLA::Push(L, entry.MailCount);
             lua_settable(L, row);
             lua_pushstring(L, "guildId");
-            YLA::Push(L, entry.GuildId);
+            lua_pushnumber(L, static_cast<lua_Number>(entry.GuildId));
             lua_settable(L, row);
             lua_pushstring(L, "arenaTeamId");
             lua_newtable(L);
@@ -1062,7 +1062,7 @@ namespace LuaGlobalFunctions
         lua_newtable(L);
         int row = lua_gettop(L);
         lua_pushstring(L, "guidLow");
-        YLA::Push(L, entry->Guid.GetCounter());
+        lua_pushnumber(L, static_cast<lua_Number>(entry->Guid.GetCounter()));
         lua_settable(L, row);
         lua_pushstring(L, "name");
         YLA::Push(L, entry->Name);
@@ -1086,7 +1086,7 @@ namespace LuaGlobalFunctions
         YLA::Push(L, entry->MailCount);
         lua_settable(L, row);
         lua_pushstring(L, "guildId");
-        YLA::Push(L, entry->GuildId);
+        lua_pushnumber(L, static_cast<lua_Number>(entry->GuildId));
         lua_settable(L, row);
         lua_pushstring(L, "arenaTeamId");
         lua_newtable(L);
@@ -2498,7 +2498,7 @@ namespace LuaGlobalFunctions
             {
                 item->SaveToDB(trans);
                 draft.AddItem(item);
-                YLA::Push(L, item->GetGUID().GetCounter());
+                lua_pushnumber(L, static_cast<lua_Number>(item->GetGUID().GetCounter()));
                 ++addedItems;
             }
         }
